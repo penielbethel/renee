@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const user = requireAuth(req, res, ['admin', 'superadmin']);
   if (!user) return;
   try {
-    await connectDB();
+    try { await connectDB(); } catch (e) { res.status(503).json({ message: 'Database unavailable' }); return; }
     if (method === 'GET') {
       const orders = await Order.find().sort({ createdAt: -1 });
       res.json(orders);

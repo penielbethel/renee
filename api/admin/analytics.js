@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const user = requireAuth(req, res, ['admin', 'superadmin']);
   if (!user) return;
   try {
-    await connectDB();
+    try { await connectDB(); } catch (e) { res.status(503).json({ message: 'Database unavailable' }); return; }
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
