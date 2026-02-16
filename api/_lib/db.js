@@ -1,17 +1,28 @@
 import mongoose from 'mongoose';
 
-let isConnected = false;
+let cachedConnection = null;
 
 export async function connectDB() {
-  if (isConnected) return;
+  if (mongoose.connection.readyState === 1) return mongoose.connection;
+  if (cachedConnection) return cachedConnection;
+
   if (!process.env.MONGODB_URI) {
-    const error = new Error('Missing required environment variables');
+    const error = new Error('Missing MONGODB_URI environment variable');
     error.code = 'ENV_MISSING';
     throw error;
   }
-  await mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 2000,
-    maxPoolSize: 5
+
+  const opts = {
+    serverSelectionTimeoutMS: 5000,
+    maxPoolSize: 1
+  };
+
+  cachedConnection = mongoose.connect(process.env.MONGODB_URI, opts).then(m => {
+    return m;
+  }).catch(err => {
+    cachedConnection = null;
+    throw err;
   });
-  isConnected = true;
+
+  return cachedConnection;
 }
