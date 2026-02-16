@@ -13,11 +13,25 @@ export async function connectDB() {
   }
 
   const opts = {
-    serverSelectionTimeoutMS: 5000,
-    maxPoolSize: 1
+    serverSelectionTimeoutMS: 10000, // 10 seconds for cold starts
+    maxPoolSize: 10, // Modern limit
+    socketTimeoutMS: 45000,
   };
 
-  cachedConnection = mongoose.connect(process.env.MONGODB_URI, opts).then(m => {
+  const connectWithRetry = async (retries = 3) => {
+    try {
+      return await mongoose.connect(process.env.MONGODB_URI, opts);
+    } catch (err) {
+      if (retries > 0) {
+        console.warn(`DB connection failed, retrying... (${retries} left)`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return connectWithRetry(retries - 1);
+      }
+      throw err;
+    }
+  };
+
+  cachedConnection = connectWithRetry().then(m => {
     return m;
   }).catch(err => {
     cachedConnection = null;

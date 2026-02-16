@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
-import { connectDB } from '../../api/_lib/db.js';
-import { Token, User } from '../../api/_lib/models.js';
-import { applyCors } from '../../api/_lib/cors.js';
+import { connectDB } from '../_lib/db.js';
+import { Token, User } from '../_lib/models.js';
+import { applyCors } from '../_lib/cors.js';
 
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
