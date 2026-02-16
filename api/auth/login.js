@@ -11,7 +11,8 @@ export default async function handler(req, res) {
     return;
   }
   try {
-    await connectDB();
+    // Attempt fast DB connect; if fails, return quickly
+    try { await connectDB(); } catch (e) { res.status(503).json({ message: 'Database temporarily unavailable' }); return; }
     const { username, password } = req.body || {};
     if (!username || !password) {
       res.status(400).json({ message: 'Username and password are required' });

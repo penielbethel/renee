@@ -6,7 +6,8 @@ let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected) return;
-  await mongoose.connect(process.env.MONGODB_URI);
+  if (!process.env.MONGODB_URI) throw new Error('ENV_MISSING');
+  await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 2000, maxPoolSize: 5 });
   isConnected = true;
 };
 

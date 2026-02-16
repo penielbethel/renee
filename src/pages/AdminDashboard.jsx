@@ -96,16 +96,15 @@ const AdminDashboard = () => {
             }
 
             // 2. Fetch Admin Data
-            const [analyticsRes, customersRes, couponsRes, ordersRes] = await Promise.all([
+            const [analyticsRes, customersRes, ordersRes] = await Promise.all([
                 axios.get(`${API_URL}/admin/analytics`, config),
                 axios.get(`${API_URL}/admin/customers`, config),
-                axios.get(`${API_URL}/admin/coupons`, config),
                 axios.get(`${API_URL}/admin/orders`, config)
             ]);
 
             setAnalytics(analyticsRes.data);
             setCustomers(customersRes.data);
-            setCoupons(couponsRes.data);
+            setCoupons([]);
             setRecentOrders(ordersRes.data);
 
             setRecentOrders(ordersRes.data);
