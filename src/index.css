@@ -1151,6 +1151,30 @@ p {
   }
 }
 
+@media (max-width: 480px) {
+  .glass-card {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .cart-item-modern {
+    gap: 0.5rem;
+  }
+
+  .cart-item-img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .shop-filters-container>div:first-child span {
+    display: none;
+  }
+
+  .shop-filters-container>div:first-child {
+    margin-right: 0.5rem !important;
+  }
+}
+
 @media (max-width: 380px) {
   .shop-title {
     font-size: 1.85rem;
@@ -1175,6 +1199,11 @@ p {
 
   .amount {
     font-size: 1.25rem;
+  }
+
+  .cart-item-qty {
+    gap: 0.25rem !important;
+    padding: 0.2rem 0.4rem !important;
   }
 }
 
