@@ -504,7 +504,7 @@ const AdminDashboard = () => {
         if (!window.confirm('Delete this registration token?')) return;
         try {
             const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/tokens/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${API_URL}/admin/tokens?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
             const res = await axios.get(`${API_URL}/admin/tokens`, { headers: { Authorization: `Bearer ${token}` } });
             setTokens(res.data);
         } catch (e) { alert('Failed to delete token'); }
