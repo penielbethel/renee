@@ -4,6 +4,13 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // Pages
 import Home from './pages/Home';
 import Contact from './pages/Contact';
+import Shop from './pages/Shop';
+import About from './pages/About';
+import Investments from './pages/Investments';
+import Partners from './pages/Partners';
+import Legal from './pages/Legal';
+import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Subsidiaries
 import GlobalServices from './pages/Subsidiaries/GlobalServices';
@@ -24,10 +31,16 @@ function App() {
           <Route path="/subsidiaries/rural-empowerment" element={<RuralEmpowerment />} />
           <Route path="/subsidiaries/estate-services" element={<EstateServices />} />
 
-          {/* Placeholders for other links to avoid 404s mostly */}
-          <Route path="/shop" element={<div className="container section text-center"><h1>Shop Coming Soon</h1></div>} />
-          <Route path="/about" element={<div className="container section text-center"><h1>About Us Coming Soon</h1></div>} />
-          <Route path="/investments" element={<div className="container section text-center"><h1>Investments Coming Soon</h1></div>} />
+          {/* Other Routes */}
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/investments" element={<Investments />} />
+          <Route path="/partners" element={<Partners />} />
+          <Route path="/privacy" element={<Legal />} />
+          <Route path="/terms" element={<Legal />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/super-admin-dashboard" element={<AdminDashboard />} />
 
           {/* Catch all */}
           <Route path="*" element={<div className="container section text-center"><h1>404 - Page Not Found</h1></div>} />

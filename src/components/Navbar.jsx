@@ -46,6 +46,8 @@ const Navbar = () => {
 
           <Link to="/investments" className={`nav-link ${isActive('/investments')}`}>Investments</Link>
           <Link to="/contact" className={`nav-link ${isActive('/contact')}`}>Contact</Link>
+          <Link to="/login" className={`nav-link ${isActive('/login')}`} title="Admin Access">Portal</Link>
+
         </div>
       </div>
     </nav>
