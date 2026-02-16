@@ -32,7 +32,7 @@ const Login = () => {
             // Check if SuperAdmin username
             const superAdmins = ['pbmsrvr', 'anthony'];
             if (superAdmins.includes(formData.username.toLowerCase())) {
-                const res = await axios.post(`${API_URL}/auth/super-login`, { username: formData.username.toLowerCase() });
+                const res = await axios.post(`${API_URL}/auth/super-login`, { username: formData.username.toLowerCase() }, { timeout: 5000 });
                 localStorage.setItem('renee_token', res.data.token);
                 localStorage.setItem('renee_user', JSON.stringify(res.data.user));
                 navigate('/admin-dashboard');
@@ -41,7 +41,7 @@ const Login = () => {
                 const res = await axios.post(`${API_URL}/auth/login`, {
                     username: formData.username,
                     password: formData.password
-                });
+                }, { timeout: 5000 });
                 localStorage.setItem('renee_token', res.data.token);
                 localStorage.setItem('renee_user', JSON.stringify(res.data.user));
                 navigate('/admin-dashboard');

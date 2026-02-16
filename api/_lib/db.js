@@ -4,6 +4,14 @@ let isConnected = false;
 
 export async function connectDB() {
   if (isConnected) return;
-  await mongoose.connect(process.env.MONGODB_URI);
+  if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
+    const error = new Error('Missing required environment variables');
+    error.code = 'ENV_MISSING';
+    throw error;
+  }
+  await mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 3000,
+    maxPoolSize: 5
+  });
   isConnected = true;
 }

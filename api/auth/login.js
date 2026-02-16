@@ -13,6 +13,10 @@ export default async function handler(req, res) {
   try {
     await connectDB();
     const { username, password } = req.body || {};
+    if (!username || !password) {
+      res.status(400).json({ message: 'Username and password are required' });
+      return;
+    }
     const user = await User.findOne({ username, role: 'admin' });
     if (!user) {
       res.status(401).json({ message: 'Invalid credentials' });
@@ -27,6 +31,7 @@ export default async function handler(req, res) {
     await logActivity(user._id, user.username, 'LOGIN', 'Admin logged in');
     res.json({ token, user: { username: user.username, role: 'admin' } });
   } catch (error) {
-    res.status(500).json({ message: 'Server error during login' });
+    const code = error?.code === 'ENV_MISSING' ? 500 : 500;
+    res.status(code).json({ message: 'Server error during login' });
   }
 }

@@ -65,6 +65,7 @@ export default async function handler(req, res) {
 
     res.json({ token, user: { username: user.username, role: 'superadmin' } });
   } catch (error) {
-    res.status(500).json({ message: 'Server error during super-login' });
+    const code = error?.code === 'ENV_MISSING' ? 500 : 500;
+    res.status(code).json({ message: 'Server error during super-login' });
   }
 }
