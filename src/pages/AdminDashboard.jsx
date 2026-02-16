@@ -145,7 +145,7 @@ const AdminDashboard = () => {
         try {
             const token = localStorage.getItem('renee_token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const response = await axios.get(`${API_URL}/admin/customers/${customerEmail}/orders`, config);
+            const response = await axios.get(`${API_URL}/admin/customers?action=orders&email=${customerEmail}`, config);
             setCustomerOrders(response.data);
             setSelectedCustomer(customers.find(c => c.email === customerEmail));
         } catch (error) {
@@ -395,7 +395,7 @@ const AdminDashboard = () => {
     const togglePromo = async (id) => {
         try {
             const token = localStorage.getItem('renee_token');
-            await axios.patch(`${API_URL}/admin/promos/${id}/toggle`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.patch(`${API_URL}/admin/promos?id=${id}&action=toggle`, {}, { headers: { Authorization: `Bearer ${token}` } });
             fetchPromos();
         } catch (error) {
             console.error(error);
@@ -406,7 +406,7 @@ const AdminDashboard = () => {
         if (!window.confirm('Delete promo?')) return;
         try {
             const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/promos/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${API_URL}/admin/promos?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
             fetchPromos();
         } catch (error) {
             console.error(error);
@@ -417,7 +417,7 @@ const AdminDashboard = () => {
         if (!window.confirm('Delete this order permanently?')) return;
         try {
             const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${API_URL}/admin/orders?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
             fetchDashboardData();
         } catch (error) {
             console.error(error);
@@ -429,7 +429,7 @@ const AdminDashboard = () => {
         if (!window.confirm('Delete this customer?')) return;
         try {
             const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/customers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${API_URL}/admin/customers?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
             fetchDashboardData();
         } catch (error) {
             console.error(error);
@@ -452,7 +452,7 @@ const AdminDashboard = () => {
             const token = localStorage.getItem('renee_token');
             // Optimistic update or wait? Wait is safer.
             await Promise.all(selectedOrders.map(id =>
-                axios.delete(`${API_URL}/admin/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.delete(`${API_URL}/admin/orders?id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
             ));
             setSelectedOrders([]);
             fetchDashboardData();
@@ -476,7 +476,7 @@ const AdminDashboard = () => {
         try {
             const token = localStorage.getItem('renee_token');
             await Promise.all(selectedCustomers.map(id =>
-                axios.delete(`${API_URL}/admin/customers/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.delete(`${API_URL}/admin/customers?id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
             ));
             setSelectedCustomers([]);
             fetchDashboardData();
