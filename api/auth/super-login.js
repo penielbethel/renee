@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import { applyCors } from '../../api/_lib/cors.js';
 
 let isConnected = false;
 
@@ -34,6 +35,7 @@ const logActivity = async (adminId, adminName, action, details) => {
 };
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') {
     res.status(405).json({ message: 'Method Not Allowed' });
     return;

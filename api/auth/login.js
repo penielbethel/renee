@@ -2,8 +2,10 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '../../api/_lib/db.js';
 import { User, logActivity } from '../../api/_lib/models.js';
 import jwt from 'jsonwebtoken';
+import { applyCors } from '../../api/_lib/cors.js';
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') {
     res.status(405).json({ message: 'Method Not Allowed' });
     return;
