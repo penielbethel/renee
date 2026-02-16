@@ -42,7 +42,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    await connectDB();
     const { username } = req.body || {};
     const superAdmins = ['pbmsrvr', 'anthony'];
 
@@ -51,21 +50,34 @@ export default async function handler(req, res) {
       return;
     }
 
-    let user = await User.findOne({ username });
-    if (!user) {
-      user = new User({ username, role: 'superadmin' });
-      await user.save();
-    } else if (user.role !== 'superadmin') {
-      user.role = 'superadmin';
-      await user.save();
+    // Try DB connect quickly; fallback to stateless token if DB unavailable
+    let dbOk = true;
+    try { await connectDB(); } catch (e) { dbOk = false; }
+
+    if (!process.env.JWT_SECRET) {
+      res.status(500).json({ message: 'Server config error: JWT secret missing' });
+      return;
     }
 
-    const token = jwt.sign({ id: user._id, username: user.username, role: 'superadmin' }, process.env.JWT_SECRET);
-    await logActivity(user._id, user.username, 'LOGIN', 'SuperAdmin logged in');
+    if (dbOk) {
+      let user = await User.findOne({ username });
+      if (!user) {
+        user = new User({ username, role: 'superadmin' });
+        await user.save();
+      } else if (user.role !== 'superadmin') {
+        user.role = 'superadmin';
+        await user.save();
+      }
+      const token = jwt.sign({ id: user._id, username: user.username, role: 'superadmin' }, process.env.JWT_SECRET, { expiresIn: '2h' });
+      await logActivity(user._id, user.username, 'LOGIN', 'SuperAdmin logged in');
+      res.json({ token, user: { username: user.username, role: 'superadmin' } });
+      return;
+    }
 
-    res.json({ token, user: { username: user.username, role: 'superadmin' } });
+    // Fallback: issue stateless token for immediate login; downstream routes will still require DB
+    const token = jwt.sign({ id: `superadmin-${username}`, username, role: 'superadmin' }, process.env.JWT_SECRET, { expiresIn: '2h' });
+    res.json({ token, user: { username, role: 'superadmin' } });
   } catch (error) {
-    const code = error?.code === 'ENV_MISSING' ? 500 : 500;
-    res.status(code).json({ message: 'Server error during super-login' });
+    res.status(500).json({ message: 'Server error during super-login' });
   }
 }
