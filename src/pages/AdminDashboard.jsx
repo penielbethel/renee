@@ -341,7 +341,7 @@ const AdminDashboard = () => {
         try {
             const token = localStorage.getItem('renee_token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.patch(`${API_URL}/admin/coupons/${id}/toggle`, {}, config);
+            await axios.patch(`${API_URL}/admin/coupons?id=${id}&action=toggle`, {}, config);
             fetchCoupons();
         } catch (error) {
             console.error('Error toggling coupon:', error);
@@ -1675,14 +1675,14 @@ const AdminDashboard = () => {
 
                                             <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
                                                 <Package size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                                                {coupon.applicableProducts.length === 0
+                                                {(coupon.applicableProducts || []).length === 0
                                                     ? 'All Products'
-                                                    : products.filter(p => coupon.applicableProducts.includes(p.id)).map(p => p.name).join(', ') || `${coupon.applicableProducts.length} Specific Product(s)`}
+                                                    : products.filter(p => (coupon.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${p.price.toLocaleString()})`).join(', ') || `${(coupon.applicableProducts || []).length} Specific Product(s)`}
                                             </div>
 
                                             <div style={{ fontSize: '0.9rem', color: '#666' }}>
                                                 <Users size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                                                Used: {coupon.usedBy.length} / {coupon.usageLimit}
+                                                Used: {(coupon.usedBy || []).length} / {coupon.usageLimit}
                                             </div>
                                         </div>
                                     ))}
@@ -1772,7 +1772,7 @@ const AdminDashboard = () => {
                                                         {promo.discountPercent}% OFF • {new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}
                                                     </p>
                                                     <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#888' }}>
-                                                        Products: {promo.applicableProducts.length === 0 ? 'All Products' : (products.filter(p => promo.applicableProducts.includes(p.id)).map(p => p.name).join(', ') || `${promo.applicableProducts.length} items`)}
+                                                        Products: {(promo.applicableProducts || []).length === 0 ? 'All Products' : (products.filter(p => (promo.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${p.price.toLocaleString()})`).join(', ') || `${(promo.applicableProducts || []).length} items`)}
                                                     </p>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -1857,7 +1857,10 @@ const AdminDashboard = () => {
                                                                 setPromoForm({ ...promoForm, applicableProducts: newSelection });
                                                             }}
                                                         />
-                                                        <span>{p.name} - {p.size}</span>
+                                                        <span style={{ fontSize: '0.9rem', color: '#333' }}>
+                                                            {p.name} - {p.size} - <span style={{ color: '#D4AF37', fontWeight: '700' }}>₦{p.price.toLocaleString()}</span>
+                                                        </span>
+
                                                     </div>
                                                 ))}
                                             </div>
@@ -2271,7 +2274,10 @@ const AdminDashboard = () => {
                                                                     onChange={() => handleProductSelection(product.id)}
                                                                     style={{ accentColor: '#D4AF37', width: '18px', height: '18px' }}
                                                                 />
-                                                                <span style={{ fontSize: '0.95rem', color: '#333' }}>{product.name} ({product.size})</span>
+                                                                <span style={{ fontSize: '0.95rem', color: '#333' }}>
+                                                                    {product.name} ({product.size}) - <span style={{ color: '#D4AF37', fontWeight: '700' }}>₦{product.price.toLocaleString()}</span>
+                                                                </span>
+
                                                             </label>
                                                         ))}
                                                     </div>

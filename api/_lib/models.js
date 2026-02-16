@@ -66,9 +66,21 @@ const ProductSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+const CouponSchema = new mongoose.Schema({
+  code: { type: String, required: true, unique: true },
+  discountPercent: { type: Number, required: true },
+  applicableProducts: { type: [String], default: [] },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  usageLimit: { type: Number, default: 1 },
+  usedBy: { type: [String], default: [] },
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+
 const PromoSchema = new mongoose.Schema({
   title: { type: String, required: true },
   discountPercent: { type: Number, required: true },
+  applicableProducts: { type: [String], default: [] },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   isActive: { type: Boolean, default: true },
@@ -82,9 +94,10 @@ export const Order = mongoose.models.Order || mongoose.model('Order', OrderSchem
 export const Customer = mongoose.models.Customer || mongoose.model('Customer', CustomerSchema);
 export const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema);
 export const Promo = mongoose.models.Promo || mongoose.model('Promo', PromoSchema);
+export const Coupon = mongoose.models.Coupon || mongoose.model('Coupon', CouponSchema);
 
 export const logActivity = async (adminId, adminName, action, details) => {
   try {
     await ActivityLog.create({ adminId, adminName, action, details });
-  } catch (e) {}
+  } catch (e) { }
 };
