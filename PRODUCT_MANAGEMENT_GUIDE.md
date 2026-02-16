@@ -17,13 +17,13 @@ To initialize the products in the database, you need to make a POST request to t
 
 ### Option 1: Using Browser Console (Easiest)
 
-1. **Login as Admin** at http://localhost:5173/login
+1. **Login as Admin** at https://renee-global.vercel.app/login
 2. **Open Browser Console** (F12 or Right-click → Inspect → Console)
 3. **Paste and run this code**:
 
 ```javascript
 const token = localStorage.getItem('renee_token');
-fetch('http://localhost:5000/api/admin/products/initialize', {
+fetch('https://renee-global.vercel.app/api/admin/products/initialize', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,
@@ -45,13 +45,13 @@ $headers = @{
     "Authorization" = "Bearer $token"
     "Content-Type" = "application/json"
 }
-Invoke-RestMethod -Uri "http://localhost:5000/api/admin/products/initialize" -Method POST -Headers $headers
+Invoke-RestMethod -Uri "https://renee-global.vercel.app/api/admin/products/initialize" -Method POST -Headers $headers
 ```
 
 ### Option 3: Using Postman or Thunder Client
 
 1. **Method**: POST
-2. **URL**: `http://localhost:5000/api/admin/products/initialize`
+2. **URL**: `https://renee-global.vercel.app/api/admin/products/initialize`
 3. **Headers**: 
    - `Authorization`: `Bearer YOUR_TOKEN`
    - `Content-Type`: `application/json`
@@ -61,7 +61,7 @@ Invoke-RestMethod -Uri "http://localhost:5000/api/admin/products/initialize" -Me
 
 ### Editing Product Prices
 
-1. **Go to Admin Dashboard** (http://localhost:5173/admin-dashboard)
+1. **Go to Admin Dashboard** (https://renee-global.vercel.app/admin-dashboard)
 2. **Scroll to Product Inventory** section
 3. **Click to expand** the collapsible section
 4. **Click "Edit Price"** on any product
@@ -71,7 +71,7 @@ Invoke-RestMethod -Uri "http://localhost:5000/api/admin/products/initialize" -Me
 
 ### Viewing Updated Prices
 
-1. **Go to Shop Page** (http://localhost:5173/shop)
+1. **Go to Shop Page** (https://renee-global.vercel.app/shop)
 2. **Refresh the page** to see updated prices
 3. Prices are fetched fresh from the database on every page load
 

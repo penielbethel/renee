@@ -150,7 +150,7 @@ npm install xlsx --legacy-peer-deps
 6. Verify all 4 sheets are populated
 
 ### Home Page Enhancements:
-1. Go to http://localhost:5173/
+1. Go to https://renee-global.vercel.app/
 2. Test the global search bar:
    - Type "kulikuli" - should show product results
    - Type "contact" - should show page results

@@ -113,7 +113,7 @@ const PRODUCTS = [
 ];
 
 const CURRENCY = '₦';
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://renee-global.vercel.app/api';
 
 const PromoBanner = ({ promos }) => {
   const [timeLeft, setTimeLeft] = useState('');

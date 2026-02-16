@@ -9,7 +9,7 @@ import {
     LayoutDashboard, LogOut, ShoppingCart, TrendingUp, Package, Users, Search
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://renee-global.vercel.app/api';
 
 // Product Inventory - Now fetched from database
 

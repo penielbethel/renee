@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Shield, Lock, User, Key, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://renee-global.vercel.app/api';
 
 const Login = () => {
     const [isRegister, setIsRegister] = useState(false);

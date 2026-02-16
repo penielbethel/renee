@@ -101,7 +101,7 @@ You can create test orders by making a POST request to `/api/orders`:
 
 ```javascript
 // Example order creation
-fetch('http://localhost:5000/api/orders', {
+fetch('https://renee-global.vercel.app/api/orders', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({

@@ -489,6 +489,27 @@ p {
   }
 }
 
+/* Small screens (iPhone SE) */
+@media (max-width: 360px) {
+  .footer {
+    padding: 2rem 0 1rem;
+  }
+  .footer h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .footer p,
+  .footer li {
+    font-size: 0.85rem;
+    margin-bottom: 0.6rem;
+  }
+  .footer-bottom {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    font-size: 0.8rem;
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.8s ease forwards;
 }

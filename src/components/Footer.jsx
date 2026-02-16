@@ -15,7 +15,7 @@ const Footer = ({
     return (
         <footer className="footer">
             <div className="container">
-                <div className="grid grid-cols-4 gap-4" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' }}>
+                <div className="grid grid-cols-4 gap-4">
 
                     {/* Column 1: Company Info */}
                     <div>
