@@ -107,18 +107,18 @@ export default async function handler(req, res) {
                 if (!match) return res.status(401).json({ message: 'Invalid credentials' });
                 const token = jwt.sign({ id: user._id, username: user.username, role: 'admin' }, process.env.JWT_SECRET);
                 await logActivity(user._id, user.username, 'LOGIN', 'Admin logged in');
-                return res.json({ token, user: { username: user.username, role: 'admin' } });
+                return res.json({ token, user: { username: user.username, fullName: user.fullName || user.username, role: 'admin' } });
             }
 
             if (endpoint === 'register-admin' && req.method === 'POST') {
-                const { username, password, tokenCode } = req.body || {};
+                const { username, fullName, password, tokenCode } = req.body || {};
                 const tokenDoc = await Token.findOne({ code: tokenCode, used: false });
                 if (!tokenDoc) return res.status(400).json({ message: 'Invalid or already used registration token' });
                 if (new Date() > tokenDoc.expiresAt) return res.status(400).json({ message: 'Registration token has expired' });
                 const existingUser = await User.findOne({ username });
                 if (existingUser) return res.status(400).json({ message: 'Username already exists' });
                 const hashedPassword = await bcrypt.hash(password, 10);
-                const newUser = new User({ username, password: hashedPassword, role: 'admin' });
+                const newUser = new User({ username, fullName, password: hashedPassword, role: 'admin' });
                 await newUser.save();
                 tokenDoc.used = true;
                 await tokenDoc.save();
@@ -129,17 +129,25 @@ export default async function handler(req, res) {
                 const { username } = req.body || {};
                 const superAdmins = ['pbmsrvr', 'techadvantage'];
                 if (!username || !superAdmins.includes(username)) return res.status(401).json({ message: 'Invalid SuperAdmin username' });
+                const superAdminNames = {
+                    'pbmsrvr': 'YINKA MICHAEL',
+                    'techadvantage': 'ANTHONY APEJI'
+                };
                 let user = await User.findOne({ username });
+                const fullName = superAdminNames[username];
+
                 if (!user) {
-                    user = new User({ username, role: 'superadmin' });
+                    user = new User({ username, fullName, role: 'superadmin' });
                     await user.save();
-                } else if (user.role !== 'superadmin') {
+                } else {
+                    // Update role and name if needed
                     user.role = 'superadmin';
+                    user.fullName = fullName;
                     await user.save();
                 }
                 const token = jwt.sign({ id: user._id, username: user.username, role: 'superadmin' }, process.env.JWT_SECRET, { expiresIn: '24h' });
                 await logActivity(user._id, user.username, 'LOGIN', 'SuperAdmin logged in');
-                return res.json({ token, user: { username: user.username, role: 'superadmin' } });
+                return res.json({ token, user: { username: user.username, fullName: user.fullName, role: 'superadmin' } });
             }
         }
 

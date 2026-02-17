@@ -653,7 +653,7 @@ const AdminDashboard = () => {
                                     Staff Portal
                                 </h1>
                                 <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', margin: 0 }}>
-                                    Welcome back, <span style={{ color: '#D4AF37', fontWeight: '700' }}>{user.username}</span>
+                                    Welcome back, <span style={{ color: '#D4AF37', fontWeight: '700' }}>{user.fullName || user.username}</span>
                                 </p>
                             </div>
                         </div>

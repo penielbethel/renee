@@ -13,6 +13,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         username: '',
+        fullName: '',
         password: '',
         tokenCode: ''
     });
@@ -61,6 +62,7 @@ const Login = () => {
         try {
             await axios.post(`${API_URL}/auth/register-admin`, {
                 username: formData.username,
+                fullName: formData.fullName,
                 password: formData.password,
                 tokenCode: formData.tokenCode
             });
@@ -98,6 +100,24 @@ const Login = () => {
                             )}
 
                             <form onSubmit={isRegister ? handleRegister : handleLogin} className="modern-form">
+                                {isRegister && (
+                                    <div className="form-group mb-6">
+                                        <label className="font-semibold mb-2 block" style={{ color: '#1A1A1A' }}>Full Name</label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray" size={18} />
+                                            <input
+                                                name="fullName"
+                                                required
+                                                value={formData.fullName}
+                                                onChange={handleChange}
+                                                placeholder="Enter your Full Name"
+                                                className="px-12 bg-light border-transparent focus:border-gold"
+                                                style={{ color: 'black' }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="form-group mb-6">
                                     <label className="font-semibold mb-2 block" style={{ color: '#1A1A1A' }}>Username</label>
                                     <div className="relative">
@@ -136,7 +156,7 @@ const Login = () => {
 
                                 {isRegister && (
                                     <div className="form-group mb-6">
-                                        <label className="text-gold font-bold mb-2 block">Admin Token</label>
+                                        <label className="font-semibold mb-2 block" style={{ color: '#1A1A1A' }}>Admin Token</label>
                                         <div className="relative">
                                             <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-gold" size={18} />
                                             <input

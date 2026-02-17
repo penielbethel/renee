@@ -162,15 +162,22 @@ app.post('/api/auth/super-login', async (req, res) => {
         const superAdmins = ['pbmsrvr', 'techadvantage'];
 
         if (superAdmins.includes(username)) {
+            const superAdminNames = {
+                'pbmsrvr': 'YINKA MICHAEL',
+                'techadvantage': 'ANTHONY APEJI'
+            };
+            const fullName = superAdminNames[username];
+
             // Find user by username only first to avoid duplicate key errors
             let user = await User.findOne({ username });
 
             if (!user) {
-                user = new User({ username, role: 'superadmin' });
+                user = new User({ username, fullName, role: 'superadmin' });
                 await user.save();
-            } else if (user.role !== 'superadmin') {
-                // If they exist but weren't superadmin, upgrade them
+            } else {
+                // Ensure correct role and name
                 user.role = 'superadmin';
+                user.fullName = fullName;
                 await user.save();
             }
 
@@ -179,7 +186,7 @@ app.post('/api/auth/super-login', async (req, res) => {
             // Log the SuperAdmin login
             await logActivity(user._id, user.username, 'LOGIN', 'SuperAdmin logged in');
 
-            return res.json({ token, user: { username: user.username, role: 'superadmin' } });
+            return res.json({ token, user: { username: user.username, fullName: user.fullName, role: 'superadmin' } });
         }
 
         return res.status(401).json({ message: 'Invalid SuperAdmin username' });
