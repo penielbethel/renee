@@ -526,7 +526,7 @@ const Contact = () => {
                                                     <div style={iconWrapStyle}><User size={18} /></div>
                                                     <input
                                                         type="text"
-                                                        placeholder="John Doe"
+                                                        placeholder="Yinka Michael"
                                                         value={formData.name}
                                                         onChange={e => handleChange('name', e.target.value)}
                                                         onFocus={() => setFocusedField('name')}
@@ -542,7 +542,7 @@ const Contact = () => {
                                                     <div style={iconWrapStyle}><AtSign size={18} /></div>
                                                     <input
                                                         type="email"
-                                                        placeholder="john@example.com"
+                                                        placeholder="anthony@renee-global.com"
                                                         value={formData.email}
                                                         onChange={e => handleChange('email', e.target.value)}
                                                         onFocus={() => setFocusedField('email')}

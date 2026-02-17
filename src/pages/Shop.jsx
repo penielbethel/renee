@@ -973,7 +973,7 @@ const Shop = () => {
                       required
                       value={checkoutForm.fullName}
                       onChange={handleFormChange}
-                      placeholder="John Doe"
+                      placeholder="Yinka Michael"
                     />
                   </div>
                   <div className="form-group">
@@ -984,7 +984,7 @@ const Shop = () => {
                       required
                       value={checkoutForm.email}
                       onChange={handleFormChange}
-                      placeholder="john@example.com"
+                      placeholder="anthony@renee-global.com"
                     />
                   </div>
                   <div className="form-group">
