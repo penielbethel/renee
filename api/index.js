@@ -127,7 +127,7 @@ export default async function handler(req, res) {
 
             if (endpoint === 'super-login' && req.method === 'POST') {
                 const { username } = req.body || {};
-                const superAdmins = ['pbmsrvr', 'anthony'];
+                const superAdmins = ['pbmsrvr', 'techadvantage'];
                 if (!username || !superAdmins.includes(username)) return res.status(401).json({ message: 'Invalid SuperAdmin username' });
                 let user = await User.findOne({ username });
                 if (!user) {

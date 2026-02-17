@@ -30,7 +30,7 @@ const Login = () => {
 
         try {
             // Check if SuperAdmin username
-            const superAdmins = ['pbmsrvr', 'anthony'];
+            const superAdmins = ['pbmsrvr', 'techadvantage'];
             if (superAdmins.includes(formData.username.toLowerCase())) {
                 const res = await axios.post(`${API_URL}/auth/super-login`, { username: formData.username.toLowerCase() }, { timeout: 15000 });
                 localStorage.setItem('renee_token', res.data.token);
@@ -115,7 +115,7 @@ const Login = () => {
                                 </div>
 
                                 {/* Only show password if not potential superadmin login or if registering */}
-                                {(!['pbmsrvr', 'anthony'].includes(formData.username.toLowerCase()) || isRegister) && (
+                                {(!['pbmsrvr', 'techadvantage'].includes(formData.username.toLowerCase()) || isRegister) && (
                                     <div className="form-group mb-6">
                                         <label className="font-semibold mb-2 block" style={{ color: '#1A1A1A' }}>Password</label>
                                         <div className="relative">

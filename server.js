@@ -159,7 +159,7 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/auth/super-login', async (req, res) => {
     try {
         const { username } = req.body;
-        const superAdmins = ['pbmsrvr', 'anthony'];
+        const superAdmins = ['pbmsrvr', 'techadvantage'];
 
         if (superAdmins.includes(username)) {
             // Find user by username only first to avoid duplicate key errors
