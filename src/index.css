@@ -1452,3 +1452,66 @@ p {
 .product-card:hover h3 {
   color: #B59328 !important;
 }
+/* Floating Cart Bubble */
+.floating-cart-bubble {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 65px;
+  height: 65px;
+  background: #1A1A1A;
+  border-radius: 50%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 5px rgba(212, 175, 55, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #D4AF37;
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-decoration: none;
+  border: 2px solid #D4AF37;
+}
+
+.floating-cart-bubble:hover {
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 15px 35px rgba(212, 175, 55, 0.3);
+  background: #242424;
+}
+
+.floating-cart-bubble .item-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #D4AF37;
+  color: #1A1A1A;
+  font-size: 12px;
+  font-weight: 800;
+  width: 24px;
+  border: 2px solid #1A1A1A;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.floating-cart-bubble.has-items {
+  animation: cartPulse 2s infinite;
+}
+
+@keyframes cartPulse {
+  0% { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  70% { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 15px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+@media (max-width: 640px) {
+  .floating-cart-bubble {
+    bottom: 20px;
+    right: 20px;
+    width: 55px;
+    height: 55px;
+  }
+}

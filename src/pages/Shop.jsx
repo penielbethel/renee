@@ -1100,6 +1100,26 @@ const Shop = () => {
           onProductClick={setViewingProduct}
         />
       )}
+      {/* Floating Cart Bubble */}
+      <a
+        href="#cart-section"
+        className={`floating-cart-bubble ${cart.length > 0 ? 'has-items' : ''}`}
+        onClick={(e) => {
+          e.preventDefault();
+          const target = document.querySelector('.shop-sidebar');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
+        style={{ textDecoration: 'none' }}
+      >
+        <ShoppingBag size={28} />
+        {cart.length > 0 && (
+          <span className="item-count">
+            {cart.reduce((sum, item) => sum + item.quantity, 0)}
+          </span>
+        )}
+      </a>
     </div>
   );
 };
