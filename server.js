@@ -140,6 +140,16 @@ const PromoSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Promo = mongoose.model('Promo', PromoSchema);
 
+// Blog Schema
+const BlogSchema = new mongoose.Schema({
+    link: { type: String, required: true }, // URL to image or article
+    caption: { type: String, required: true },
+    author: { type: String, required: true }, // Admin Name
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const BlogPost = mongoose.model('BlogPost', BlogSchema);
+
 // --- AUTH MIDDLEWARE ---
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -1121,6 +1131,75 @@ app.delete('/api/admin/promos/:id', authenticateToken, async (req, res) => {
     try {
         await Promo.findByIdAndDelete(req.params.id);
         res.json({ message: 'Promo deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ================== BLOG ENDPOINTS ==================
+
+// Get Active Blogs (Public)
+app.get('/api/blogs', async (req, res) => {
+    try {
+        const blogs = await BlogPost.find({ isActive: true }).sort({ createdAt: -1 });
+        res.json(blogs);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get All Blogs (Admin)
+app.get('/api/admin/blogs', authenticateToken, async (req, res) => {
+    try {
+        const blogs = await BlogPost.find().sort({ createdAt: -1 });
+        res.json(blogs);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Create Blog Post (Admin)
+app.post('/api/admin/blogs', authenticateToken, async (req, res) => {
+    try {
+        const { link, caption, author } = req.body;
+
+        if (!link || !caption) {
+            return res.status(400).json({ message: 'Link and Caption are required' });
+        }
+
+        const blog = new BlogPost({
+            link,
+            caption,
+            author: author || req.user.username // Use provided author name or fallback to username
+        });
+
+        await blog.save();
+        res.status(201).json({ message: 'Blog post created', blog });
+    } catch (error) {
+        console.error('Error creating blog:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Toggle Blog Status (Admin)
+app.patch('/api/admin/blogs/:id/toggle', authenticateToken, async (req, res) => {
+    try {
+        const blog = await BlogPost.findById(req.params.id);
+        if (!blog) return res.status(404).json({ message: 'Blog post not found' });
+
+        blog.isActive = !blog.isActive;
+        await blog.save();
+        res.json(blog);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete Blog Post (Admin)
+app.delete('/api/admin/blogs/:id', authenticateToken, async (req, res) => {
+    try {
+        await BlogPost.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Blog post deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
