@@ -31,7 +31,7 @@ const About = () => {
             {/* Introduction & Our Story */}
             <section className="section">
                 <div className="container">
-                    <div className="grid grid-cols-2 gap-12 items-center">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div style={{ position: 'relative' }}>
                             <div style={{
                                 position: 'absolute',
