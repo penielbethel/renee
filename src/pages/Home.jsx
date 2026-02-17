@@ -251,7 +251,7 @@ const Home = () => {
                         <span style={{ color: '#D4AF37', fontWeight: '700', fontSize: '0.9rem' }}>ABOUT US</span>
                     </div>
                     <h2 className="mb-4" style={{ fontSize: '2.5rem', fontWeight: '700' }}>Feeding the Future Through Innovation</h2>
-                    <p className="lead" style={{ maxWidth: '900px', margin: '0 auto 3rem', fontSize: '1.2rem', color: '#555', lineHeight: '1.8' }}>
+                    <p className="lead" style={{ maxWidth: '900px', margin: '0 auto 3rem', fontSize: '1.2rem', color: '#555', lineHeight: '1.8', textAlign: 'justify' }}>
                         At Renee Golden Multi-ventures Limited, we are redefining the agricultural landscape.
                         Our core focus lies in the <strong style={{ color: '#D4AF37' }}>Agric Food Value Chain</strong>, bridging the gap between farm and table through
                         advanced <strong style={{ color: '#D4AF37' }}>Food Production and Processing</strong>. We are committed to nutrient-rich, hygienic, and
@@ -350,19 +350,7 @@ const Home = () => {
 
                         {/* Product 1: Kulikuli */}
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div className="product-card card overflow-hidden" style={{
-                                borderRadius: '16px',
-                                transition: 'all 0.3s ease',
-                                border: '1px solid #f0f0f0'
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-12px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(212,175,55,0.25)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}>
+                            <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden', position: 'relative' }}>
                                     <img src="/images/Renee Kulikuli.jpg" alt="Renee Kulikuli" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <div style={{
@@ -394,19 +382,7 @@ const Home = () => {
 
                         {/* Product 2: Renee Oils */}
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div className="product-card card overflow-hidden" style={{
-                                borderRadius: '16px',
-                                transition: 'all 0.3s ease',
-                                border: '1px solid #f0f0f0'
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-12px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(212,175,55,0.25)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}>
+                            <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden' }}>
                                     <img src="/images/Renee Oil1.jpg" alt="Renee Oils" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
@@ -424,19 +400,7 @@ const Home = () => {
 
                         {/* Product 3: Tigernut Drinks */}
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div className="product-card card overflow-hidden" style={{
-                                borderRadius: '16px',
-                                transition: 'all 0.3s ease',
-                                border: '1px solid #f0f0f0'
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-12px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(212,175,55,0.25)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}>
+                            <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden' }}>
                                     <img src="/images/Renee Tigernut.jpg" alt="Renee Tigernuts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
@@ -454,19 +418,7 @@ const Home = () => {
 
                         {/* Product 4: Renee Honey */}
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div className="product-card card overflow-hidden" style={{
-                                borderRadius: '16px',
-                                transition: 'all 0.3s ease',
-                                border: '1px solid #f0f0f0'
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-12px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(212,175,55,0.25)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}>
+                            <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden', position: 'relative' }}>
                                     <img src="/images/Renee Honey.jpg" alt="Renee Honey" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <div style={{
@@ -498,19 +450,7 @@ const Home = () => {
 
                         {/* Product 5: Renee Rice */}
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div className="product-card card overflow-hidden" style={{
-                                borderRadius: '16px',
-                                transition: 'all 0.3s ease',
-                                border: '1px solid #f0f0f0'
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-12px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(212,175,55,0.25)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}>
+                            <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden' }}>
                                     <img src="/images/renee Rice.jpg" alt="Renee Rice" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
