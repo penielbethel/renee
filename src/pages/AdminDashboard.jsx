@@ -402,11 +402,24 @@ const AdminDashboard = () => {
     const createPromo = async () => {
         try {
             const token = localStorage.getItem('renee_token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            const payload = {
+                title: promoForm.title,
+                discountPercent: Number(promoForm.discountPercent),
+                applicableProducts: promoForm.applicableProducts,
+                startDate: promoForm.startDate,
+                endDate: promoForm.endDate
+            };
+
+            await axios.post(`${API_URL}/admin/promos`, payload, config);
+
             triggerNotify('✅ Promo created successfully!');
             setShowPromoModal(false);
             setPromoForm({ title: '', discountPercent: '', applicableProducts: [], startDate: '', endDate: '' });
             fetchPromos();
         } catch (error) {
+            console.error('Error creating promo:', error);
             triggerNotify(error.response?.data?.message || '❌ Error creating promo', 'error');
         }
     };
