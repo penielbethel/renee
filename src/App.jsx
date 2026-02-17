@@ -22,10 +22,26 @@ import Preloader from './components/Preloader';
 function App() {
   const [loading, setLoading] = React.useState(true);
 
+  React.useEffect(() => {
+    // Hide the HTML preloader once React mounts
+    const htmlPreloader = document.getElementById('app-preloader');
+    if (htmlPreloader) {
+      // Keep it visible for a moment to ensure smooth transition
+      setTimeout(() => {
+        htmlPreloader.style.opacity = '0';
+        setTimeout(() => {
+          htmlPreloader.remove();
+          setLoading(false);
+        }, 500);
+      }, 3000); // Wait 3 seconds before fading out
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
   return (
     <Router>
-      {loading && <Preloader onFinish={() => setLoading(false)} />}
-      <div className="app" style={{ display: loading ? 'none' : 'block' }}>
+      <div className="app" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
         <Routes>
           {/* Parent Routes */}
           <Route path="/" element={<Home />} />
