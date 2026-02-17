@@ -1,5 +1,24 @@
 {
   "rewrites": [
-    { "source": "/((?!api).*)", "destination": "/index.html" }
+    {
+      "source": "/api/auth/:match*",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/admin/:match*",
+      "destination": "/api/admin"
+    },
+    {
+      "source": "/api/products",
+      "destination": "/api/public"
+    },
+    {
+      "source": "/api/promos/active",
+      "destination": "/api/public"
+    },
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
   ]
 }
