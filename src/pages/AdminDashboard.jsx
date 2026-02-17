@@ -58,7 +58,8 @@ const AdminDashboard = () => {
         applicableProducts: [],
         startDate: '',
         endDate: '',
-        usageLimit: 1
+        description: '',
+        status: 'active'
     });
 
     // Blog management state
@@ -67,7 +68,9 @@ const AdminDashboard = () => {
     const [showBlogSection, setShowBlogSection] = useState(false);
     const [blogForm, setBlogForm] = useState({
         link: '',
-        caption: ''
+        title: '', // Supporting legacy title field if any
+        caption: '',
+        category: 'News' // Default category
     });
 
     // Custom Modals & Notifications
@@ -176,6 +179,65 @@ const AdminDashboard = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const createBlog = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('renee_token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            const payload = {
+                link: blogForm.link,
+                caption: blogForm.caption,
+                category: blogForm.category || 'News',
+                title: blogForm.title || blogForm.caption.substring(0, 50)
+            };
+
+            await axios.post(`${API_URL}/admin/blogs`, payload, config);
+
+            setShowBlogModal(false);
+            setBlogForm({ link: '', title: '', caption: '', category: 'News' });
+            triggerNotify('Blog post created successfully!');
+
+            // Refresh list
+            const res = await axios.get(`${API_URL}/admin/blogs`, config);
+            setBlogs(res.data);
+        } catch (error) {
+            console.error('Error creating blog:', error);
+            triggerNotify('Failed to create blog post', 'error');
+        }
+    };
+
+    const toggleBlogStatus = async (id) => {
+        try {
+            const token = localStorage.getItem('renee_token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.patch(`${API_URL}/admin/blogs/${id}/toggle`, {}, config);
+
+            setBlogs(blogs.map(b => b._id === id ? { ...b, isActive: !b.isActive } : b));
+            triggerNotify('Blog status updated');
+        } catch (error) {
+            console.error('Error toggling blog status:', error);
+            triggerNotify('Failed to update status', 'error');
+        }
+    };
+
+    const deleteBlog = (id) => {
+        triggerConfirm('Delete Blog Post?', 'Are you sure you want to delete this post? This action cannot be undone.', async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                await axios.delete(`${API_URL}/admin/blogs/${id}`, config);
+
+                setBlogs(blogs.filter(b => b._id !== id));
+                setConfirmModal({ show: false, title: '', message: '', onConfirm: () => { } });
+                triggerNotify('Blog post deleted');
+            } catch (error) {
+                console.error('Error deleting blog:', error);
+                triggerNotify('Failed to delete blog post', 'error');
+            }
+        });
     };
 
     const viewCustomerOrders = async (customerEmail) => {
@@ -1790,37 +1852,107 @@ return (
                                 }}
                             />
                         </div>
-                    </button>
+                    </div>
 
-                    {/* Collapsible Content */}
                     <div style={{
-                        maxHeight: showCouponSection ? '5000px' : '0',
-                        opacity: showCouponSection ? 1 : 0,
-                        overflow: showCouponSection ? 'visible' : 'hidden',
-                        transition: 'max-height 0.8s ease, opacity 0.4s ease, padding 0.4s ease',
-                        padding: showCouponSection ? '2rem' : '0 2rem'
+                        display: showCouponSection ? 'block' : 'none',
+                        padding: '2rem',
+                        animation: 'fadeIn 0.3s ease-in-out'
                     }}>
-                        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
                             <button
-                                onClick={() => setShowCouponModal(true)}
+                                onClick={() => {
+                                    fetchCoupons?.(); // Use optional chaining in case function missing locally
+                                    setShowCouponModal(true);
+                                }}
+                                className="btn-primary"
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '0.5rem',
                                     padding: '0.75rem 1.5rem',
-                                    backgroundColor: '#1A1A1A',
-                                    color: '#D4AF37',
-                                    border: 'none',
                                     borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontWeight: '700'
+                                    fontSize: '0.95rem'
                                 }}
                             >
-                                <Plus size={18} />
-                                New Coupon / Promo
+                                <Tag size={18} />
+                                Create New Coupon
                             </button>
                         </div>
 
+                        {(coupons || []).length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: '#888', backgroundColor: '#F9F9F9', borderRadius: '12px' }}>
+                                <Ticket size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                                <p>No coupons created yet. Click "Create New Coupon" to start.</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                                {(coupons || []).map(coupon => (
+                                    <div key={coupon._id} style={{
+                                        border: '1px solid #E0E0E0',
+                                        borderRadius: '12px',
+                                        padding: '1.5rem',
+                                        backgroundColor: coupon.isActive ? '#fff' : '#f9f9f9',
+                                        opacity: coupon.isActive ? 1 : 0.7,
+                                        position: 'relative',
+                                        transition: 'all 0.3s ease'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                            <div>
+                                                <div style={{
+                                                    backgroundColor: '#D4AF37',
+                                                    color: '#fff',
+                                                    padding: '0.25rem 0.75rem',
+                                                    borderRadius: '50px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '700',
+                                                    display: 'inline-block',
+                                                    marginBottom: '0.5rem'
+                                                }}>
+                                                    {coupon.code}
+                                                </div>
+                                                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1A1A1A' }}>
+                                                    {coupon.discountPercent}% OFF
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    onClick={() => typeof handleToggleCoupon === 'function' && handleToggleCoupon(coupon._id)}
+                                                    title={coupon.isActive ? "Deactivate" : "Activate"}
+                                                    style={{ padding: '0.5rem', borderRadius: '50%', border: 'none', cursor: 'pointer', backgroundColor: coupon.isActive ? '#E8F5E9' : '#FFEBEE', color: coupon.isActive ? '#2E7D32' : '#C62828' }}
+                                                >
+                                                    <Activity size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => typeof handleDeleteCoupon === 'function' && handleDeleteCoupon(coupon._id)}
+                                                    title="Delete"
+                                                    style={{ padding: '0.5rem', borderRadius: '50%', border: 'none', cursor: 'pointer', backgroundColor: '#FFEBEE', color: '#C62828' }}
+                                                >
+                                                    <LogOut size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                                            <Calendar size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                                            {new Date(coupon.startDate).toLocaleDateString()} - {new Date(coupon.endDate).toLocaleDateString()}
+                                        </div>
+
+                                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                                            <Package size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                                            {(coupon.applicableProducts || []).length === 0
+                                                ? 'All Products'
+                                                : (products || []).filter(p => (coupon.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${(p.price || 0).toLocaleString()})`).join(', ') || `${(coupon.applicableProducts || []).length} Specific Product(s)`}
+                                        </div>
+
+                                        <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                                            <Users size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                                            Used: {(coupon.usedBy || []).length} / {coupon.usageLimit}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1981,1121 +2113,1002 @@ return (
                                     </div>
                                 </div>
                             ))}
-                        </div>                                backgroundColor: '#FFF9E6',
-                        borderRadius: '12px',
-                        color: '#D4AF37'
-                            }}>
-                        <Ticket size={24} />
-                    </div>
-                    <div>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1A1A1A' }}>Coupon Management</h3>
-                        <p style={{ margin: '0.25rem 0 0', color: '#888', fontSize: '0.9rem' }}>Create and manage discount codes</p>
+                        </div>
                     </div>
                 </div>
-                <ChevronDown
-                    size={24}
-                    color="#888"
-                    style={{
-                        transform: showCouponSection ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.3s ease'
-                    }}
-                />
-            </div>
 
-            <div style={{
-                display: showCouponSection ? 'block' : 'none',
-                padding: '2rem',
-                animation: 'fadeIn 0.3s ease-in-out'
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
-                    <button
-                        onClick={() => {
-                            fetchCoupons();
-                            setShowCouponModal(true);
-                        }}
-                        className="btn-primary"
+                {/* Promo Management Section */}
+                <div className="promo-management-section my-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style={{ marginTop: '2rem', marginBottom: '2rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E0E0E0', overflow: 'hidden' }}>
+                    <div
+                        onClick={() => setShowPromoSection(!showPromoSection)}
                         style={{
+                            padding: '1.5rem 2rem',
                             display: 'flex',
+                            justifyContent: 'space-between',
                             alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '8px',
-                            fontSize: '0.95rem'
-                        }}
-                    >
-                        <Tag size={18} />
-                        Create New Coupon
-                    </button>
-                </div>
-
-                {(coupons || []).length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: '#888', backgroundColor: '#F9F9F9', borderRadius: '12px' }}>
-                        <Ticket size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                        <p>No coupons created yet. Click "Create New Coupon" to start.</p>
-                    </div>
-                ) : (
-                    <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-                        {(coupons || []).map(coupon => (
-                            <div key={coupon._id} style={{
-                                border: '1px solid #E0E0E0',
-                                borderRadius: '12px',
-                                padding: '1.5rem',
-                                backgroundColor: coupon.isActive ? '#fff' : '#f9f9f9',
-                                opacity: coupon.isActive ? 1 : 0.7,
-                                position: 'relative',
-                                transition: 'all 0.3s ease'
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                    <div>
-                                        <div style={{
-                                            backgroundColor: '#D4AF37',
-                                            color: '#fff',
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '50px',
-                                            fontSize: '0.85rem',
-                                            fontWeight: '700',
-                                            display: 'inline-block',
-                                            marginBottom: '0.5rem'
-                                        }}>
-                                            {coupon.code}
-                                        </div>
-                                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1A1A1A' }}>
-                                            {coupon.discountPercent}% OFF
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button
-                                            onClick={() => handleToggleCoupon(coupon._id)}
-                                            title={coupon.isActive ? "Deactivate" : "Activate"}
-                                            style={{ padding: '0.5rem', borderRadius: '50%', border: 'none', cursor: 'pointer', backgroundColor: coupon.isActive ? '#E8F5E9' : '#FFEBEE', color: coupon.isActive ? '#2E7D32' : '#C62828' }}
-                                        >
-                                            <Activity size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteCoupon(coupon._id)}
-                                            title="Delete"
-                                            style={{ padding: '0.5rem', borderRadius: '50%', border: 'none', cursor: 'pointer', backgroundColor: '#FFEBEE', color: '#C62828' }}
-                                        >
-                                            <LogOut size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                                    <Calendar size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                                    {new Date(coupon.startDate).toLocaleDateString()} - {new Date(coupon.endDate).toLocaleDateString()}
-                                </div>
-
-                                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                                    <Package size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                                    {(coupon.applicableProducts || []).length === 0
-                                        ? 'All Products'
-                                        : (products || []).filter(p => (coupon.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${(p.price || 0).toLocaleString()})`).join(', ') || `${(coupon.applicableProducts || []).length} Specific Product(s)`}
-                                </div>
-
-                                <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                                    <Users size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                                    Used: {(coupon.usedBy || []).length} / {coupon.usageLimit}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-    </div>
-
-                {/* Promo Management Section */ }
-<div className="promo-management-section my-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style={{ marginTop: '2rem', marginBottom: '2rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E0E0E0', overflow: 'hidden' }}>
-    <div
-        onClick={() => setShowPromoSection(!showPromoSection)}
-        style={{
-            padding: '1.5rem 2rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            cursor: 'pointer',
-            borderBottom: showPromoSection ? '1px solid #E0E0E0' : 'none',
-            backgroundColor: showPromoSection ? '#FAFAFA' : '#FFFFFF',
-            transition: 'all 0.3s ease'
-        }}
-    >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#FFF9E6',
-                borderRadius: '12px',
-                color: '#D4AF37'
-            }}>
-                <Zap size={24} />
-            </div>
-            <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1A1A1A' }}>Promo Management (Hot Sales)</h3>
-                <p style={{ margin: '0.25rem 0 0', color: '#888', fontSize: '0.9rem' }}>Create auto-applied discounts and sales events</p>
-            </div>
-        </div>
-        <ChevronDown
-            size={24}
-            color="#888"
-            style={{
-                transform: showPromoSection ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s ease'
-            }}
-        />
-    </div>
-
-    {showPromoSection && (
-        <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease-in-out' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
-                <button
-                    onClick={() => setShowPromoModal(true)}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        padding: '0.75rem 1.5rem', borderRadius: '8px',
-                        backgroundColor: '#D4AF37', color: '#1A1A1A',
-                        fontWeight: '600', border: 'none', cursor: 'pointer'
-                    }}
-                >
-                    <Plus size={18} />
-                    Create New Promo
-                </button>
-            </div>
-
-            <div style={{ display: 'grid', gap: '1rem' }}>
-                {(promos || []).length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No active promotions found.</p>
-                ) : (
-                    (promos || []).map(promo => (
-                        <div key={promo._id} style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '1rem', border: '1px solid #E0E0E0', borderRadius: '8px',
-                            backgroundColor: promo.isActive ? '#FFF' : '#F9FAFB'
-                        }}>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700' }}>{promo.title}</h4>
-                                    <span style={{
-                                        padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600',
-                                        backgroundColor: promo.isActive ? '#E6FFFA' : '#F3F4F6',
-                                        color: promo.isActive ? '#047857' : '#6B7280'
-                                    }}>
-                                        {promo.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                    </span>
-                                </div>
-                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#666' }}>
-                                    {promo.discountPercent}% OFF • {new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}
-                                </p>
-                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#888' }}>
-                                    Products: {(promo.applicableProducts || []).length === 0 ? 'All Products' : ((products || []).filter(p => (promo.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${(p.price || 0).toLocaleString()})`).join(', ') || `${(promo.applicableProducts || []).length} items`)}
-                                </p>
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                <button onClick={() => togglePromo(promo._id)} style={{ padding: '0.5rem 1rem', border: '1px solid #E0E0E0', borderRadius: '4px', background: 'transparent', cursor: 'pointer' }}>
-                                    {promo.isActive ? 'Deactivate' : 'Activate'}
-                                </button>
-                                <button onClick={() => deletePromo(promo._id)} style={{ color: '#EF4444', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
-    )}
-</div>
-
-{/* Promo Modal */ }
-{
-    showPromoModal && (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', zIndex: 1003
-        }} onClick={() => setShowPromoModal(false)}>
-            <div style={{
-                backgroundColor: '#FFF', borderRadius: '8px', padding: '2rem',
-                width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto'
-            }} onClick={e => e.stopPropagation()}>
-                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Create New Promo</h3>
-
-                <div style={{ display: 'grid', gap: '1rem' }}>
-                    <input
-                        type="text"
-                        placeholder="Promo Title (e.g. Flash Sale)"
-                        value={promoForm.title}
-                        onChange={e => setPromoForm({ ...promoForm, title: e.target.value })}
-                        style={{ padding: '0.75rem', width: '100%', border: '1px solid #E0E0E0', borderRadius: '4px' }}
-                    />
-                    <input
-                        type="number"
-                        placeholder="Discount %"
-                        value={promoForm.discountPercent}
-                        onChange={e => setPromoForm({ ...promoForm, discountPercent: Number(e.target.value) })}
-                        style={{ padding: '0.75rem', width: '100%', border: '1px solid #E0E0E0', borderRadius: '4px' }}
-                    />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.25rem' }}>Start Date</label>
-                            <input
-                                type="date"
-                                value={promoForm.startDate}
-                                onChange={e => setPromoForm({ ...promoForm, startDate: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #E0E0E0', borderRadius: '4px' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.25rem' }}>End Date</label>
-                            <input
-                                type="date"
-                                value={promoForm.endDate}
-                                onChange={e => setPromoForm({ ...promoForm, endDate: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #E0E0E0', borderRadius: '4px' }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Product Selection */}
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Select Products (Optional)</label>
-                        <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E0E0E0', borderRadius: '4px', padding: '0.5rem' }}>
-                            {(products || []).map(p => (
-                                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={promoForm.applicableProducts.includes(p.id)}
-                                        onChange={(e) => {
-                                            const newSelection = e.target.checked
-                                                ? [...promoForm.applicableProducts, p.id]
-                                                : promoForm.applicableProducts.filter(id => id !== p.id);
-                                            setPromoForm({ ...promoForm, applicableProducts: newSelection });
-                                        }}
-                                    />
-                                    <span style={{ fontSize: '0.9rem', color: '#333' }}>
-                                        {p.name} - {p.size} - <span style={{ color: '#D4AF37', fontWeight: '700' }}>₦{p.price.toLocaleString()}</span>
-                                    </span>
-
-                                </div>
-                            ))}
-                        </div>
-                        <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>Leave unselected to apply to ALL products.</p>
-                    </div>
-
-                    <button
-                        onClick={createPromo}
-                        style={{
-                            padding: '1rem', backgroundColor: '#D4AF37', color: '#1A1A1A',
-                            border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', marginTop: '1rem'
-                        }}
-                    >
-                        Create Promo
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{/* Edit Price Modal */ }
-{
-    editingProduct && (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1001,
-            padding: '2rem'
-        }} onClick={() => setEditingProduct(null)}>
-            <div style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '12px',
-                padding: '2.5rem',
-                maxWidth: '500px',
-                width: '100%',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-            }} onClick={(e) => e.stopPropagation()}>
-                <h3 style={{
-                    marginBottom: '0.5rem',
-                    fontFamily: 'Outfit, sans-serif',
-                    fontSize: '1.75rem',
-                    color: '#1A1A1A'
-                }}>
-                    Edit Product Details
-                </h3>
-                <p style={{ color: '#888', marginBottom: '2rem', fontSize: '0.9rem' }}>
-                    {editingProduct.name} - {editingProduct.size}
-                </p>
-
-                <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
-                    {/* Price Input */}
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.9rem' }}>
-                            Price (₦)
-                        </label>
-                        <input
-                            type="number"
-                            value={editForm.price}
-                            onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                            style={{
-                                width: '100%', padding: '0.75rem', fontSize: '1.1rem', fontWeight: '700',
-                                border: '2px solid #E0E0E0', borderRadius: '8px', outline: 'none'
-                            }}
-                            placeholder="Enter new price"
-                        />
-                    </div>
-
-                    {/* Stock Status */}
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.9rem' }}>
-                            Stock Status
-                        </label>
-                        <select
-                            value={editForm.stockStatus}
-                            onChange={(e) => setEditForm({ ...editForm, stockStatus: e.target.value })}
-                            style={{
-                                width: '100%', padding: '0.75rem', fontSize: '1rem',
-                                border: '2px solid #E0E0E0', borderRadius: '8px', outline: 'none', backgroundColor: '#fff'
-                            }}
-                        >
-                            <option value="in_stock">In Stock</option>
-                            <option value="low_stock">Low Stock</option>
-                            <option value="out_of_stock">Out of Stock</option>
-                        </select>
-                    </div>
-
-                    {/* New Arrival Toggle */}
-                    <div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-                            <input
-                                type="checkbox"
-                                checked={editForm.isNewArrival}
-                                onChange={(e) => setEditForm({ ...editForm, isNewArrival: e.target.checked })}
-                                style={{ width: '20px', height: '20px', accentColor: '#D4AF37' }}
-                            />
-                            <span style={{ fontWeight: '700', color: '#1A1A1A', fontSize: '1rem' }}>Mark as New Arrival</span>
-                        </label>
-                        <p style={{ fontSize: '0.8rem', color: '#888', marginLeft: '2rem', marginTop: '0.25rem' }}>
-                            Manually tags this product as 'New'
-                        </p>
-                    </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={saveProductDetails}
-                        style={{
-                            flex: 1, padding: '1rem', backgroundColor: '#D4AF37', color: '#1A1A1A',
-                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700',
-                            fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
-                        }}
-                    >
-                        <Save size={20} />
-                        Save Changes
-                    </button>
-                    <button
-                        onClick={() => setEditingProduct(null)}
-                        style={{
-                            flex: 1,
-                            padding: '1rem',
-                            backgroundColor: '#F0F0F0',
-                            color: '#1A1A1A',
-                            border: 'none',
-                            borderRadius: '8px',
                             cursor: 'pointer',
-                            fontWeight: '700',
-                            fontSize: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
+                            borderBottom: showPromoSection ? '1px solid #E0E0E0' : 'none',
+                            backgroundColor: showPromoSection ? '#FAFAFA' : '#FFFFFF',
                             transition: 'all 0.3s ease'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E0E0E0'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
                     >
-                        <X size={20} />
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{/* Customer Orders Modal */ }
-{
-    selectedCustomer && (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '2rem'
-        }} onClick={() => setSelectedCustomer(null)}>
-            <div style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '8px',
-                padding: '2rem',
-                maxWidth: '800px',
-                width: '100%',
-                maxHeight: '80vh',
-                overflowY: 'auto'
-            }} onClick={(e) => e.stopPropagation()}>
-                <h3 style={{ marginBottom: '1rem', fontFamily: 'Outfit, sans-serif' }}>
-                    Orders by {selectedCustomer.name}
-                </h3>
-                <p style={{ color: '#888', marginBottom: '2rem' }}>
-                    {selectedCustomer.email} • {customerOrders.length} orders
-                </p>
-                {customerOrders.map(order => (
-                    <div key={order._id} style={{
-                        padding: '1rem',
-                        border: '1px solid #E0E0E0',
-                        borderRadius: '4px',
-                        marginBottom: '1rem'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <strong>{order.orderNumber}</strong>
-                            <span style={{ color: '#D4AF37', fontWeight: '700' }}>
-                                ₦{order.totalAmount.toLocaleString()}
-                            </span>
-                        </div>
-                        <p style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                            {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
-                        <div>
-                            {order.items.map((item, idx) => (
-                                <p key={idx} style={{ fontSize: '0.85rem', margin: '0.25rem 0' }}>
-                                    • {item.productName} x{item.quantity}
-                                </p>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-                <button
-                    onClick={() => setSelectedCustomer(null)}
-                    style={{
-                        padding: '0.75rem 2rem',
-                        backgroundColor: '#1A1A1A',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        marginTop: '1rem'
-                    }}
-                >
-                    Close
-                </button>
-            </div>
-        </div>
-    )
-}
-
-{/* Create/Edit Coupon Modal */ }
-{
-    showCouponModal && (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1002,
-            padding: '1rem',
-            backdropFilter: 'blur(5px)'
-        }}>
-            <div style={{
-                backgroundColor: '#fff',
-                borderRadius: '16px',
-                padding: '2rem',
-                width: '100%',
-                maxWidth: '600px',
-                maxHeight: '90vh',
-                overflowY: 'auto',
-                position: 'relative',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}>
-                <button
-                    onClick={() => setShowCouponModal(false)}
-                    style={{
-                        position: 'absolute',
-                        top: '1.5rem',
-                        right: '1.5rem',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '0.5rem',
-                        borderRadius: '50%',
-                        backgroundColor: '#F5F5F5',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <X size={20} color="#666" />
-                </button>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                    <div style={{ padding: '0.75rem', backgroundColor: '#FFF9E6', borderRadius: '12px', color: '#D4AF37' }}>
-                        <Tag size={24} />
-                    </div>
-                    <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#1A1A1A' }}>Create New Coupon</h3>
-                </div>
-
-                <form onSubmit={handleCreateCoupon}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Coupon Code</label>
-                            <input
-                                type="text"
-                                required
-                                placeholder="SUMMER25"
-                                value={couponForm.code}
-                                onChange={e => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #E0E0E0',
-                                    fontSize: '1rem',
-                                    textTransform: 'uppercase',
-                                    fontWeight: '700',
-                                    letterSpacing: '1px'
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Discount Percentage</label>
-                            <select
-                                value={couponForm.discountPercent}
-                                onChange={e => setCouponForm({ ...couponForm, discountPercent: parseInt(e.target.value) })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #E0E0E0',
-                                    fontSize: '1rem',
-                                    backgroundColor: '#fff'
-                                }}
-                            >
-                                {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(percent => (
-                                    <option key={percent} value={percent}>{percent}%</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Start Date</label>
-                            <input
-                                type="date"
-                                required
-                                value={couponForm.startDate}
-                                onChange={e => setCouponForm({ ...couponForm, startDate: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #E0E0E0',
-                                    fontSize: '0.9rem'
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>End Date</label>
-                            <input
-                                type="date"
-                                required
-                                min={couponForm.startDate}
-                                value={couponForm.endDate}
-                                onChange={e => setCouponForm({ ...couponForm, endDate: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #E0E0E0',
-                                    fontSize: '0.9rem'
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Usage Limit (Total uses)</label>
-                        <input
-                            type="number"
-                            min="1"
-                            required
-                            value={couponForm.usageLimit}
-                            onChange={e => setCouponForm({ ...couponForm, usageLimit: parseInt(e.target.value) })}
-                            style={{
-                                width: '100%',
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{
                                 padding: '0.75rem',
-                                borderRadius: '8px',
-                                border: '1px solid #E0E0E0',
-                                fontSize: '1rem'
+                                backgroundColor: '#FFF9E6',
+                                borderRadius: '12px',
+                                color: '#D4AF37'
+                            }}>
+                                <Zap size={24} />
+                            </div>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1A1A1A' }}>Promo Management (Hot Sales)</h3>
+                                <p style={{ margin: '0.25rem 0 0', color: '#888', fontSize: '0.9rem' }}>Create auto-applied discounts and sales events</p>
+                            </div>
+                        </div>
+                        <ChevronDown
+                            size={24}
+                            color="#888"
+                            style={{
+                                transform: showPromoSection ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.3s ease'
                             }}
                         />
                     </div>
 
-                    <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Applicable Products (Select specific or leave empty for all)</label>
-                        <div style={{
-                            border: '1px solid #E0E0E0',
-                            borderRadius: '8px',
-                            padding: '1rem',
-                            maxHeight: '200px',
-                            overflowY: 'auto',
-                            backgroundColor: '#FAFAFA'
-                        }}>
-                            {products.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '1rem' }}>
-                                    <p style={{ color: '#888', fontStyle: 'italic', margin: 0, marginBottom: '0.5rem' }}>No products available to select.</p>
-                                    <button
-                                        type="button"
-                                        onClick={fetchDashboardData}
-                                        style={{ fontSize: '0.8rem', color: '#D4AF37', background: 'none', border: '1px solid #D4AF37', borderRadius: '4px', padding: '0.25rem 0.5rem', cursor: 'pointer' }}
-                                    >
-                                        Retry Loading
-                                    </button>
-                                </div>
-                            ) : (
-                                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                                    {(products || []).map(product => (
-                                        <label key={product.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '4px', backgroundColor: couponForm.applicableProducts.includes(product.id) ? '#FFF9E6' : 'transparent' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={couponForm.applicableProducts.includes(product.id)}
-                                                onChange={() => handleProductSelection(product.id)}
-                                                style={{ accentColor: '#D4AF37', width: '18px', height: '18px' }}
-                                            />
-                                            <span style={{ fontSize: '0.95rem', color: '#333' }}>
-                                                {product.name} ({product.size}) - <span style={{ color: '#D4AF37', fontWeight: '700' }}>₦{product.price.toLocaleString()}</span>
-                                            </span>
+                    {showPromoSection && (
+                        <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease-in-out' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                                <button
+                                    onClick={() => setShowPromoModal(true)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                        padding: '0.75rem 1.5rem', borderRadius: '8px',
+                                        backgroundColor: '#D4AF37', color: '#1A1A1A',
+                                        fontWeight: '600', border: 'none', cursor: 'pointer'
+                                    }}
+                                >
+                                    <Plus size={18} />
+                                    Create New Promo
+                                </button>
+                            </div>
 
-                                        </label>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            backgroundColor: '#1A1A1A',
-                            color: '#D4AF37',
-                            border: '2px solid #D4AF37',
-                            borderRadius: '8px',
-                            fontSize: '1.1rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem'
-                        }}
-                        onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = '#D4AF37';
-                            e.currentTarget.style.color = '#1A1A1A';
-                        }}
-                        onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = '#1A1A1A';
-                            e.currentTarget.style.color = '#D4AF37';
-                        }}
-                    >
-                        <Tag size={20} />
-                        Create Coupon
-                    </button>
-                </form>
-            </div>
-        </div>
-    )
-}
-            </div >
-        </section >
-
-    {/* Super Admin: Admin Management */ }
-{
-    user.role === 'superadmin' && (
-        <section style={{ padding: '2rem 5%' }}>
-            <div style={{ backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '1.5rem', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A' }}>
-                    Admin Management
-                </h2>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Username</th>
-                                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Role</th>
-                                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Created At</th>
-                                <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {adminsList.length > 0 ? (
-                                adminsList.map((admin) => (
-                                    <tr key={admin._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                        <td style={{ padding: '1rem', color: '#1F2937', fontWeight: '500' }}>{admin.username}</td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: admin.role === 'superadmin' ? '#FEF3C7' : '#E0E7FF', color: admin.role === 'superadmin' ? '#D97706' : '#4F46E5' }}>
-                                                {admin.role}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>
-                                            {new Date(admin.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                            <button
-                                                onClick={() => handleViewActivity(admin)}
-                                                style={{
-                                                    padding: '0.5rem 1rem',
-                                                    backgroundColor: '#1A1A1A',
-                                                    color: '#D4AF37',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9rem',
-                                                    fontWeight: '600',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.5rem'
-                                                }}
-                                            >
-                                                <Activity size={16} /> Activity
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteAdmin(admin)}
-                                                style={{
-                                                    padding: '0.5rem 1rem',
-                                                    backgroundColor: '#FEE2E2',
-                                                    color: '#DC2626',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9rem',
-                                                    fontWeight: '600',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.5rem',
-                                                    marginLeft: '0.5rem'
-                                                }}
-                                            >
-                                                <Trash2 size={16} /> Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>No other admins found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
-
-            <div style={{ marginTop: '2rem', backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.8rem', fontWeight: '800', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A', margin: 0 }}>
-                        Registration Tokens
-                    </h2>
-                    <button
-                        onClick={handleGenerateToken}
-                        disabled={isGeneratingToken}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            backgroundColor: '#D4AF37',
-                            color: '#1A1A1A',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: '700',
-                            cursor: isGeneratingToken ? 'not-allowed' : 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '0.5rem'
-                        }}
-                    >
-                        <Plus size={20} /> {isGeneratingToken ? 'Generating...' : 'Generate Token'}
-                    </button>
-                </div>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Token Code</th>
-                                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Status</th>
-                                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Expires</th>
-                                <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tokens.length > 0 ? tokens.map(token => (
-                                <tr key={token._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                    <td style={{ padding: '1rem', fontFamily: 'monospace', fontWeight: '700', fontSize: '1.1rem', letterSpacing: '1px' }}>{token.code}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '50px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: token.used ? '#FEE2E2' : '#D1FAE5', color: token.used ? '#B91C1C' : '#047857' }}>
-                                            {token.used ? 'Used' : 'Active'}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '1rem', color: '#6B7280' }}>{new Date(token.expiresAt).toLocaleDateString()}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <button onClick={() => handleDeleteToken(token._id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                            <Trash2 size={20} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            )) : (
-                                <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No tokens generated.</td></tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </section>
-    )
-}
-
-{/* Activity Modal */ }
-{
-    showActivityModal && (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 3000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(4px)'
-        }} onClick={() => setShowActivityModal(false)}>
-            <div style={{
-                backgroundColor: '#FFF', width: '100%', maxWidth: '700px',
-                borderRadius: '12px', maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-            }} onClick={e => e.stopPropagation()}>
-                <div style={{ padding: '1.5rem', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#111827', margin: 0 }}>
-                        Activity Log: <span style={{ color: '#D4AF37' }}>{selectedAdminName}</span>
-                    </h3>
-                    <button onClick={() => setShowActivityModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}>
-                        <X size={24} />
-                    </button>
-                </div>
-                <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
-                    {(activityLogs || []).length > 0 ? (
-                        <div style={{ display: 'grid', gap: '1rem', padding: '1rem' }}>
-                            {activityLogs.map((log) => (
-                                <div key={log._id} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                                    <div style={{ marginTop: '0.25rem', padding: '0.5rem', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#D97706' }}>
-                                        <Clock size={16} />
-                                    </div>
-                                    <div>
-                                        <p style={{ fontWeight: '600', color: '#1F2937', margin: '0 0 0.25rem 0' }}>{log.action}</p>
-                                        <p style={{ color: '#4B5563', fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>{log.details}</p>
-                                        <p style={{ color: '#9CA3AF', fontSize: '0.85rem', margin: 0 }}>{new Date(log.timestamp).toLocaleString()}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: '#6B7280' }}>
-                            <p>No activity recorded yet.</p>
+                            <div style={{ display: 'grid', gap: '1rem' }}>
+                                {(promos || []).length === 0 ? (
+                                    <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No active promotions found.</p>
+                                ) : (
+                                    (promos || []).map(promo => (
+                                        <div key={promo._id} style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '1rem', border: '1px solid #E0E0E0', borderRadius: '8px',
+                                            backgroundColor: promo.isActive ? '#FFF' : '#F9FAFB'
+                                        }}>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700' }}>{promo.title}</h4>
+                                                    <span style={{
+                                                        padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600',
+                                                        backgroundColor: promo.isActive ? '#E6FFFA' : '#F3F4F6',
+                                                        color: promo.isActive ? '#047857' : '#6B7280'
+                                                    }}>
+                                                        {promo.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                                    </span>
+                                                </div>
+                                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#666' }}>
+                                                    {promo.discountPercent}% OFF • {new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}
+                                                </p>
+                                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#888' }}>
+                                                    Products: {(promo.applicableProducts || []).length === 0 ? 'All Products' : ((products || []).filter(p => (promo.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${(p.price || 0).toLocaleString()})`).join(', ') || `${(promo.applicableProducts || []).length} items`)}
+                                                </p>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                <button onClick={() => togglePromo(promo._id)} style={{ padding: '0.5rem 1rem', border: '1px solid #E0E0E0', borderRadius: '4px', background: 'transparent', cursor: 'pointer' }}>
+                                                    {promo.isActive ? 'Deactivate' : 'Activate'}
+                                                </button>
+                                                <button onClick={() => deletePromo(promo._id)} style={{ color: '#EF4444', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
-    )
-}
 
-{/* --- NEW BLOG POST MODAL --- */ }
-{
-    showBlogModal && (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-            zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-            <div style={{
-                backgroundColor: '#FFFFFF',
-                width: '90%', maxWidth: '600px',
-                borderRadius: '16px',
-                padding: '2rem',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#111827' }}>Create New Blog Post</h2>
-                    <button onClick={() => setShowBlogModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                        <X size={24} />
-                    </button>
-                </div>
+                {/* Promo Modal */}
+                {
+                    showPromoModal && (
+                        <div style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', zIndex: 1003
+                        }} onClick={() => setShowPromoModal(false)}>
+                            <div style={{
+                                backgroundColor: '#FFF', borderRadius: '8px', padding: '2rem',
+                                width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto'
+                            }} onClick={e => e.stopPropagation()}>
+                                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Create New Promo</h3>
 
-                <form onSubmit={createBlog}>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Image Link (Thumbnail)</label>
-                        <input
-                            type="url"
-                            placeholder="https://example.com/image.jpg"
-                            value={blogForm.link}
-                            onChange={e => setBlogForm({ ...blogForm, link: e.target.value })}
-                            required
-                            style={{
-                                width: '100%', padding: '0.75rem', borderRadius: '8px',
-                                border: '1px solid #D1D5DB', fontSize: '1rem'
-                            }}
-                        />
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Promo Title (e.g. Flash Sale)"
+                                        value={promoForm.title}
+                                        onChange={e => setPromoForm({ ...promoForm, title: e.target.value })}
+                                        style={{ padding: '0.75rem', width: '100%', border: '1px solid #E0E0E0', borderRadius: '4px' }}
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Discount %"
+                                        value={promoForm.discountPercent}
+                                        onChange={e => setPromoForm({ ...promoForm, discountPercent: Number(e.target.value) })}
+                                        style={{ padding: '0.75rem', width: '100%', border: '1px solid #E0E0E0', borderRadius: '4px' }}
+                                    />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.25rem' }}>Start Date</label>
+                                            <input
+                                                type="date"
+                                                value={promoForm.startDate}
+                                                onChange={e => setPromoForm({ ...promoForm, startDate: e.target.value })}
+                                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #E0E0E0', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.25rem' }}>End Date</label>
+                                            <input
+                                                type="date"
+                                                value={promoForm.endDate}
+                                                onChange={e => setPromoForm({ ...promoForm, endDate: e.target.value })}
+                                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #E0E0E0', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Product Selection */}
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Select Products (Optional)</label>
+                                        <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E0E0E0', borderRadius: '4px', padding: '0.5rem' }}>
+                                            {(products || []).map(p => (
+                                                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={promoForm.applicableProducts.includes(p.id)}
+                                                        onChange={(e) => {
+                                                            const newSelection = e.target.checked
+                                                                ? [...promoForm.applicableProducts, p.id]
+                                                                : promoForm.applicableProducts.filter(id => id !== p.id);
+                                                            setPromoForm({ ...promoForm, applicableProducts: newSelection });
+                                                        }}
+                                                    />
+                                                    <span style={{ fontSize: '0.9rem', color: '#333' }}>
+                                                        {p.name} - {p.size} - <span style={{ color: '#D4AF37', fontWeight: '700' }}>₦{p.price.toLocaleString()}</span>
+                                                    </span>
+
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>Leave unselected to apply to ALL products.</p>
+                                    </div>
+
+                                    <button
+                                        onClick={createPromo}
+                                        style={{
+                                            padding: '1rem', backgroundColor: '#D4AF37', color: '#1A1A1A',
+                                            border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', marginTop: '1rem'
+                                        }}
+                                    >
+                                        Create Promo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Edit Price Modal */}
+                {
+                    editingProduct && (
+                        <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1001,
+                            padding: '2rem'
+                        }} onClick={() => setEditingProduct(null)}>
+                            <div style={{
+                                backgroundColor: '#FFFFFF',
+                                borderRadius: '12px',
+                                padding: '2.5rem',
+                                maxWidth: '500px',
+                                width: '100%',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            }} onClick={(e) => e.stopPropagation()}>
+                                <h3 style={{
+                                    marginBottom: '0.5rem',
+                                    fontFamily: 'Outfit, sans-serif',
+                                    fontSize: '1.75rem',
+                                    color: '#1A1A1A'
+                                }}>
+                                    Edit Product Details
+                                </h3>
+                                <p style={{ color: '#888', marginBottom: '2rem', fontSize: '0.9rem' }}>
+                                    {editingProduct.name} - {editingProduct.size}
+                                </p>
+
+                                <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
+                                    {/* Price Input */}
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.9rem' }}>
+                                            Price (₦)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editForm.price}
+                                            onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                                            style={{
+                                                width: '100%', padding: '0.75rem', fontSize: '1.1rem', fontWeight: '700',
+                                                border: '2px solid #E0E0E0', borderRadius: '8px', outline: 'none'
+                                            }}
+                                            placeholder="Enter new price"
+                                        />
+                                    </div>
+
+                                    {/* Stock Status */}
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.9rem' }}>
+                                            Stock Status
+                                        </label>
+                                        <select
+                                            value={editForm.stockStatus}
+                                            onChange={(e) => setEditForm({ ...editForm, stockStatus: e.target.value })}
+                                            style={{
+                                                width: '100%', padding: '0.75rem', fontSize: '1rem',
+                                                border: '2px solid #E0E0E0', borderRadius: '8px', outline: 'none', backgroundColor: '#fff'
+                                            }}
+                                        >
+                                            <option value="in_stock">In Stock</option>
+                                            <option value="low_stock">Low Stock</option>
+                                            <option value="out_of_stock">Out of Stock</option>
+                                        </select>
+                                    </div>
+
+                                    {/* New Arrival Toggle */}
+                                    <div>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={editForm.isNewArrival}
+                                                onChange={(e) => setEditForm({ ...editForm, isNewArrival: e.target.checked })}
+                                                style={{ width: '20px', height: '20px', accentColor: '#D4AF37' }}
+                                            />
+                                            <span style={{ fontWeight: '700', color: '#1A1A1A', fontSize: '1rem' }}>Mark as New Arrival</span>
+                                        </label>
+                                        <p style={{ fontSize: '0.8rem', color: '#888', marginLeft: '2rem', marginTop: '0.25rem' }}>
+                                            Manually tags this product as 'New'
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button
+                                        onClick={saveProductDetails}
+                                        style={{
+                                            flex: 1, padding: '1rem', backgroundColor: '#D4AF37', color: '#1A1A1A',
+                                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700',
+                                            fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
+                                        }}
+                                    >
+                                        <Save size={20} />
+                                        Save Changes
+                                    </button>
+                                    <button
+                                        onClick={() => setEditingProduct(null)}
+                                        style={{
+                                            flex: 1,
+                                            padding: '1rem',
+                                            backgroundColor: '#F0F0F0',
+                                            color: '#1A1A1A',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontWeight: '700',
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '0.5rem',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E0E0E0'}
+                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
+                                    >
+                                        <X size={20} />
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Customer Orders Modal */}
+                {
+                    selectedCustomer && (
+                        <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1000,
+                            padding: '2rem'
+                        }} onClick={() => setSelectedCustomer(null)}>
+                            <div style={{
+                                backgroundColor: '#FFFFFF',
+                                borderRadius: '8px',
+                                padding: '2rem',
+                                maxWidth: '800px',
+                                width: '100%',
+                                maxHeight: '80vh',
+                                overflowY: 'auto'
+                            }} onClick={(e) => e.stopPropagation()}>
+                                <h3 style={{ marginBottom: '1rem', fontFamily: 'Outfit, sans-serif' }}>
+                                    Orders by {selectedCustomer.name}
+                                </h3>
+                                <p style={{ color: '#888', marginBottom: '2rem' }}>
+                                    {selectedCustomer.email} • {customerOrders.length} orders
+                                </p>
+                                {customerOrders.map(order => (
+                                    <div key={order._id} style={{
+                                        padding: '1rem',
+                                        border: '1px solid #E0E0E0',
+                                        borderRadius: '4px',
+                                        marginBottom: '1rem'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                            <strong>{order.orderNumber}</strong>
+                                            <span style={{ color: '#D4AF37', fontWeight: '700' }}>
+                                                ₦{order.totalAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <p style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+                                            {new Date(order.createdAt).toLocaleDateString()}
+                                        </p>
+                                        <div>
+                                            {order.items.map((item, idx) => (
+                                                <p key={idx} style={{ fontSize: '0.85rem', margin: '0.25rem 0' }}>
+                                                    • {item.productName} x{item.quantity}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                                <button
+                                    onClick={() => setSelectedCustomer(null)}
+                                    style={{
+                                        padding: '0.75rem 2rem',
+                                        backgroundColor: '#1A1A1A',
+                                        color: '#FFFFFF',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        marginTop: '1rem'
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Create/Edit Coupon Modal */}
+                {
+                    showCouponModal && (
+                        <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1002,
+                            padding: '1rem',
+                            backdropFilter: 'blur(5px)'
+                        }}>
+                            <div style={{
+                                backgroundColor: '#fff',
+                                borderRadius: '16px',
+                                padding: '2rem',
+                                width: '100%',
+                                maxWidth: '600px',
+                                maxHeight: '90vh',
+                                overflowY: 'auto',
+                                position: 'relative',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                            }}>
+                                <button
+                                    onClick={() => setShowCouponModal(false)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '1.5rem',
+                                        right: '1.5rem',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '0.5rem',
+                                        borderRadius: '50%',
+                                        backgroundColor: '#F5F5F5',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <X size={20} color="#666" />
+                                </button>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                                    <div style={{ padding: '0.75rem', backgroundColor: '#FFF9E6', borderRadius: '12px', color: '#D4AF37' }}>
+                                        <Tag size={24} />
+                                    </div>
+                                    <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#1A1A1A' }}>Create New Coupon</h3>
+                                </div>
+
+                                <form onSubmit={handleCreateCoupon}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Coupon Code</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="SUMMER25"
+                                                value={couponForm.code}
+                                                onChange={e => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.75rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #E0E0E0',
+                                                    fontSize: '1rem',
+                                                    textTransform: 'uppercase',
+                                                    fontWeight: '700',
+                                                    letterSpacing: '1px'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Discount Percentage</label>
+                                            <select
+                                                value={couponForm.discountPercent}
+                                                onChange={e => setCouponForm({ ...couponForm, discountPercent: parseInt(e.target.value) })}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.75rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #E0E0E0',
+                                                    fontSize: '1rem',
+                                                    backgroundColor: '#fff'
+                                                }}
+                                            >
+                                                {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(percent => (
+                                                    <option key={percent} value={percent}>{percent}%</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Start Date</label>
+                                            <input
+                                                type="date"
+                                                required
+                                                value={couponForm.startDate}
+                                                onChange={e => setCouponForm({ ...couponForm, startDate: e.target.value })}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.75rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #E0E0E0',
+                                                    fontSize: '0.9rem'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>End Date</label>
+                                            <input
+                                                type="date"
+                                                required
+                                                min={couponForm.startDate}
+                                                value={couponForm.endDate}
+                                                onChange={e => setCouponForm({ ...couponForm, endDate: e.target.value })}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.75rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #E0E0E0',
+                                                    fontSize: '0.9rem'
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Usage Limit (Total uses)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            required
+                                            value={couponForm.usageLimit}
+                                            onChange={e => setCouponForm({ ...couponForm, usageLimit: parseInt(e.target.value) })}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem',
+                                                borderRadius: '8px',
+                                                border: '1px solid #E0E0E0',
+                                                fontSize: '1rem'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div style={{ marginBottom: '2rem' }}>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>Applicable Products (Select specific or leave empty for all)</label>
+                                        <div style={{
+                                            border: '1px solid #E0E0E0',
+                                            borderRadius: '8px',
+                                            padding: '1rem',
+                                            maxHeight: '200px',
+                                            overflowY: 'auto',
+                                            backgroundColor: '#FAFAFA'
+                                        }}>
+                                            {products.length === 0 ? (
+                                                <div style={{ textAlign: 'center', padding: '1rem' }}>
+                                                    <p style={{ color: '#888', fontStyle: 'italic', margin: 0, marginBottom: '0.5rem' }}>No products available to select.</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={fetchDashboardData}
+                                                        style={{ fontSize: '0.8rem', color: '#D4AF37', background: 'none', border: '1px solid #D4AF37', borderRadius: '4px', padding: '0.25rem 0.5rem', cursor: 'pointer' }}
+                                                    >
+                                                        Retry Loading
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                                    {(products || []).map(product => (
+                                                        <label key={product.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '4px', backgroundColor: couponForm.applicableProducts.includes(product.id) ? '#FFF9E6' : 'transparent' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={couponForm.applicableProducts.includes(product.id)}
+                                                                onChange={() => handleProductSelection(product.id)}
+                                                                style={{ accentColor: '#D4AF37', width: '18px', height: '18px' }}
+                                                            />
+                                                            <span style={{ fontSize: '0.95rem', color: '#333' }}>
+                                                                {product.name} ({product.size}) - <span style={{ color: '#D4AF37', fontWeight: '700' }}>₦{product.price.toLocaleString()}</span>
+                                                            </span>
+
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        style={{
+                                            width: '100%',
+                                            padding: '1rem',
+                                            backgroundColor: '#1A1A1A',
+                                            color: '#D4AF37',
+                                            border: '2px solid #D4AF37',
+                                            borderRadius: '8px',
+                                            fontSize: '1.1rem',
+                                            fontWeight: '700',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '0.5rem'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#D4AF37';
+                                            e.currentTarget.style.color = '#1A1A1A';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#1A1A1A';
+                                            e.currentTarget.style.color = '#D4AF37';
+                                        }}
+                                    >
+                                        <Tag size={20} />
+                                        Create Coupon
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )
+                }
+            </div >
+        </section >
+
+        {/* Super Admin: Admin Management */}
+        {
+            user.role === 'superadmin' && (
+                <section style={{ padding: '2rem 5%' }}>
+                    <div style={{ backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '1.5rem', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A' }}>
+                            Admin Management
+                        </h2>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Username</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Role</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Created At</th>
+                                        <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {adminsList.length > 0 ? (
+                                        adminsList.map((admin) => (
+                                            <tr key={admin._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                                                <td style={{ padding: '1rem', color: '#1F2937', fontWeight: '500' }}>{admin.username}</td>
+                                                <td style={{ padding: '1rem' }}>
+                                                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: admin.role === 'superadmin' ? '#FEF3C7' : '#E0E7FF', color: admin.role === 'superadmin' ? '#D97706' : '#4F46E5' }}>
+                                                        {admin.role}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>
+                                                    {new Date(admin.createdAt).toLocaleDateString()}
+                                                </td>
+                                                <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                                    <button
+                                                        onClick={() => handleViewActivity(admin)}
+                                                        style={{
+                                                            padding: '0.5rem 1rem',
+                                                            backgroundColor: '#1A1A1A',
+                                                            color: '#D4AF37',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.9rem',
+                                                            fontWeight: '600',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.5rem'
+                                                        }}
+                                                    >
+                                                        <Activity size={16} /> Activity
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteAdmin(admin)}
+                                                        style={{
+                                                            padding: '0.5rem 1rem',
+                                                            backgroundColor: '#FEE2E2',
+                                                            color: '#DC2626',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.9rem',
+                                                            fontWeight: '600',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.5rem',
+                                                            marginLeft: '0.5rem'
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} /> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>No other admins found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
                     </div>
-                    <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Caption / Title</label>
-                        <textarea
-                            placeholder="Enter blog post title or caption..."
-                            value={blogForm.caption}
-                            onChange={e => setBlogForm({ ...blogForm, caption: e.target.value })}
-                            required
-                            rows="4"
-                            style={{
-                                width: '100%', padding: '0.75rem', borderRadius: '8px',
-                                border: '1px solid #D1D5DB', fontSize: '1rem', resize: 'vertical'
-                            }}
-                        />
+
+                    <div style={{ marginTop: '2rem', backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: '800', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A', margin: 0 }}>
+                                Registration Tokens
+                            </h2>
+                            <button
+                                onClick={handleGenerateToken}
+                                disabled={isGeneratingToken}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: '#D4AF37',
+                                    color: '#1A1A1A',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '700',
+                                    cursor: isGeneratingToken ? 'not-allowed' : 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                }}
+                            >
+                                <Plus size={20} /> {isGeneratingToken ? 'Generating...' : 'Generate Token'}
+                            </button>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Token Code</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Status</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Expires</th>
+                                        <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tokens.length > 0 ? tokens.map(token => (
+                                        <tr key={token._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                                            <td style={{ padding: '1rem', fontFamily: 'monospace', fontWeight: '700', fontSize: '1.1rem', letterSpacing: '1px' }}>{token.code}</td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <span style={{ padding: '0.25rem 0.75rem', borderRadius: '50px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: token.used ? '#FEE2E2' : '#D1FAE5', color: token.used ? '#B91C1C' : '#047857' }}>
+                                                    {token.used ? 'Used' : 'Active'}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '1rem', color: '#6B7280' }}>{new Date(token.expiresAt).toLocaleDateString()}</td>
+                                            <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                                <button onClick={() => handleDeleteToken(token._id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No tokens generated.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                        <button
-                            type="button"
-                            onClick={() => setShowBlogModal(false)}
-                            style={{
-                                padding: '0.75rem 1.5rem', borderRadius: '8px',
-                                border: '1px solid #D1D5DB', background: '#FFF',
-                                fontWeight: '600', cursor: 'pointer'
-                            }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            style={{
-                                padding: '0.75rem 1.5rem', borderRadius: '8px',
-                                border: 'none', background: '#D4AF37',
-                                color: '#FFF', fontWeight: '700', cursor: 'pointer'
-                            }}
-                        >
-                            Publish Post
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    )
-}
+                </section>
+            )
+        }
 
-{/* --- CUSTOM CONFIRM MODAL --- */ }
-{
-    confirmModal.show && (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-        }}>
-            <div style={{
-                backgroundColor: '#FFF', width: '90%', maxWidth: '400px',
-                borderRadius: '20px', padding: '2rem', textAlign: 'center',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.2)', animation: 'scaleUp 0.3s ease'
-            }}>
+        {/* Activity Modal */}
+        {
+            showActivityModal && (
                 <div style={{
-                    width: '64px', height: '64px', backgroundColor: '#FEF2F2',
-                    borderRadius: '50%', display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', margin: '0 auto 1.5rem', color: '#EF4444'
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 3000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(4px)'
+                }} onClick={() => setShowActivityModal(false)}>
+                    <div style={{
+                        backgroundColor: '#FFF', width: '100%', maxWidth: '700px',
+                        borderRadius: '12px', maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ padding: '1.5rem', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                                Activity Log: <span style={{ color: '#D4AF37' }}>{selectedAdminName}</span>
+                            </h3>
+                            <button onClick={() => setShowActivityModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+                            {(activityLogs || []).length > 0 ? (
+                                <div style={{ display: 'grid', gap: '1rem', padding: '1rem' }}>
+                                    {activityLogs.map((log) => (
+                                        <div key={log._id} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                                            <div style={{ marginTop: '0.25rem', padding: '0.5rem', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#D97706' }}>
+                                                <Clock size={16} />
+                                            </div>
+                                            <div>
+                                                <p style={{ fontWeight: '600', color: '#1F2937', margin: '0 0 0.25rem 0' }}>{log.action}</p>
+                                                <p style={{ color: '#4B5563', fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>{log.details}</p>
+                                                <p style={{ color: '#9CA3AF', fontSize: '0.85rem', margin: 0 }}>{new Date(log.timestamp).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ padding: '3rem', textAlign: 'center', color: '#6B7280' }}>
+                                    <p>No activity recorded yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+
+        {/* --- NEW BLOG POST MODAL --- */}
+        {
+            showBlogModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <XCircle size={32} />
-                </div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 1rem', color: '#111827' }}>
-                    {confirmModal.title}
-                </h3>
-                <p style={{ color: '#6B7280', lineHeight: '1.6', marginBottom: '2rem' }}>
-                    {confirmModal.message}
-                </p>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
-                        style={{
-                            flex: 1, padding: '0.9rem', borderRadius: '12px',
-                            border: '1px solid #E5E7EB', backgroundColor: '#FFF',
-                            fontWeight: '700', cursor: 'pointer', color: '#374151'
-                        }}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={confirmModal.onConfirm}
-                        style={{
-                            flex: 1, padding: '0.9rem', borderRadius: '12px',
-                            border: 'none', backgroundColor: '#111827',
-                            color: '#FFF', fontWeight: '700', cursor: 'pointer'
-                        }}
-                    >
-                        Confirm
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
+                    <div style={{
+                        backgroundColor: '#FFFFFF',
+                        width: '90%', maxWidth: '600px',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#111827' }}>Create New Blog Post</h2>
+                            <button onClick={() => setShowBlogModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
 
-{/* --- CUSTOM NOTIFICATION --- */ }
-{
-    notify.show && (
-        <div style={{
-            position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
-            zIndex: 10000, minWidth: '300px', animation: 'slideUp 0.4s ease'
-        }}>
-            <div style={{
-                backgroundColor: notify.type === 'error' ? '#EF4444' : '#10B981',
-                color: '#FFF', padding: '1rem 1.5rem', borderRadius: '12px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.2)', display: 'flex',
-                alignItems: 'center', gap: '1rem', fontWeight: '600'
-            }}>
-                {notify.type === 'error' ? <XCircle size={20} /> : <CheckCircle size={20} />}
-                {notify.message}
-            </div>
-        </div>
-    )
-}
+                        <form onSubmit={createBlog}>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Image Link (Thumbnail)</label>
+                                <input
+                                    type="url"
+                                    placeholder="https://example.com/image.jpg"
+                                    value={blogForm.link}
+                                    onChange={e => setBlogForm({ ...blogForm, link: e.target.value })}
+                                    required
+                                    style={{
+                                        width: '100%', padding: '0.75rem', borderRadius: '8px',
+                                        border: '1px solid #D1D5DB', fontSize: '1rem'
+                                    }}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '2rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Caption / Title</label>
+                                <textarea
+                                    placeholder="Enter blog post title or caption..."
+                                    value={blogForm.caption}
+                                    onChange={e => setBlogForm({ ...blogForm, caption: e.target.value })}
+                                    required
+                                    rows="4"
+                                    style={{
+                                        width: '100%', padding: '0.75rem', borderRadius: '8px',
+                                        border: '1px solid #D1D5DB', fontSize: '1rem', resize: 'vertical'
+                                    }}
+                                />
+                            </div>
 
-<Footer
-    companyName="Renee Golden Multi-ventures Limited"
-    registration="RC 1506925"
-    address="Okewande Street, Budo Nuhu Village, Airport Area, Kwara State, Nigeria"
-    email="info@reneegoldenmultiventures.com"
-    phone="+234-XXX-XXX-XXXX"
-    aboutText="A diversified agricultural, industrial, and investment company committed to long-term value creation."
-    quickLinks={[
-        { label: 'Marketplace', url: '/shop' },
-        { label: 'Backoffice Settings', url: '#' }
-    ]}
-    ctaText="Back To Marketplace"
-    ctaLink="/shop"
-/>
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBlogModal(false)}
+                                    style={{
+                                        padding: '0.75rem 1.5rem', borderRadius: '8px',
+                                        border: '1px solid #D1D5DB', background: '#FFF',
+                                        fontWeight: '600', cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    style={{
+                                        padding: '0.75rem 1.5rem', borderRadius: '8px',
+                                        border: 'none', background: '#D4AF37',
+                                        color: '#FFF', fontWeight: '700', cursor: 'pointer'
+                                    }}
+                                >
+                                    Publish Post
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )
+        }
+
+        {/* --- CUSTOM CONFIRM MODAL --- */}
+        {
+            confirmModal.show && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <div style={{
+                        backgroundColor: '#FFF', width: '90%', maxWidth: '400px',
+                        borderRadius: '20px', padding: '2rem', textAlign: 'center',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.2)', animation: 'scaleUp 0.3s ease'
+                    }}>
+                        <div style={{
+                            width: '64px', height: '64px', backgroundColor: '#FEF2F2',
+                            borderRadius: '50%', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', margin: '0 auto 1.5rem', color: '#EF4444'
+                        }}>
+                            <XCircle size={32} />
+                        </div>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 1rem', color: '#111827' }}>
+                            {confirmModal.title}
+                        </h3>
+                        <p style={{ color: '#6B7280', lineHeight: '1.6', marginBottom: '2rem' }}>
+                            {confirmModal.message}
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button
+                                onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                                style={{
+                                    flex: 1, padding: '0.9rem', borderRadius: '12px',
+                                    border: '1px solid #E5E7EB', backgroundColor: '#FFF',
+                                    fontWeight: '700', cursor: 'pointer', color: '#374151'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmModal.onConfirm}
+                                style={{
+                                    flex: 1, padding: '0.9rem', borderRadius: '12px',
+                                    border: 'none', backgroundColor: '#111827',
+                                    color: '#FFF', fontWeight: '700', cursor: 'pointer'
+                                }}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+
+        {/* --- CUSTOM NOTIFICATION --- */}
+        {
+            notify.show && (
+                <div style={{
+                    position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 10000, minWidth: '300px', animation: 'slideUp 0.4s ease'
+                }}>
+                    <div style={{
+                        backgroundColor: notify.type === 'error' ? '#EF4444' : '#10B981',
+                        color: '#FFF', padding: '1rem 1.5rem', borderRadius: '12px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)', display: 'flex',
+                        alignItems: 'center', gap: '1rem', fontWeight: '600'
+                    }}>
+                        {notify.type === 'error' ? <XCircle size={20} /> : <CheckCircle size={20} />}
+                        {notify.message}
+                    </div>
+                </div>
+            )
+        }
+
+        <Footer
+            companyName="Renee Golden Multi-ventures Limited"
+            registration="RC 1506925"
+            address="Okewande Street, Budo Nuhu Village, Airport Area, Kwara State, Nigeria"
+            email="info@reneegoldenmultiventures.com"
+            phone="+234-XXX-XXX-XXXX"
+            aboutText="A diversified agricultural, industrial, and investment company committed to long-term value creation."
+            quickLinks={[
+                { label: 'Marketplace', url: '/shop' },
+                { label: 'Backoffice Settings', url: '#' }
+            ]}
+            ctaText="Back To Marketplace"
+            ctaLink="/shop"
+        />
     </div >
 );
 };
