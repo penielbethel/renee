@@ -246,6 +246,18 @@ export default async function handler(req, res) {
                     return res.json({ message: 'Admin user deleted successfully' });
                 }
             }
+
+            // 9. Activity
+            if (endpoint === 'activity') {
+                const user = requireAuth(req, res, ['superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') {
+                    const adminId = pathParts[3]; // /api/admin/activity/:id
+                    if (!adminId) return res.status(400).json({ message: 'Admin ID required' });
+                    const logs = await ActivityLog.find({ adminId }).sort({ timestamp: -1 });
+                    return res.json(logs);
+                }
+            }
         }
 
         return res.status(404).json({ message: 'API Route Not Found' });
