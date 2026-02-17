@@ -38,6 +38,8 @@ const AdminDashboard = () => {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [customerOrders, setCustomerOrders] = useState([]);
     const [showProductInventory, setShowProductInventory] = useState(false);
+    const [showOrderHistory, setShowOrderHistory] = useState(false); // New state for Order History
+    const [showCustomers, setShowCustomers] = useState(false);       // New state for Customers
     const [products, setProducts] = useState([]);
     const [editingProduct, setEditingProduct] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -1143,7 +1145,28 @@ const AdminDashboard = () => {
                                 }}>
                                     Order History
                                 </h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+                                {/* Toggle Button */}
+                                <button
+                                    onClick={() => setShowOrderHistory(!showOrderHistory)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        color: showOrderHistory ? '#D4AF37' : '#888',
+                                        transition: 'color 0.3s'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                                        {showOrderHistory ? 'Collapse' : 'Expand'}
+                                    </span>
+                                    <ChevronDown size={20} style={{ transform: showOrderHistory ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                                </button>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
                                     {selectedOrders.length > 0 && (
                                         <button onClick={deleteSelectedOrders} style={{ padding: '0.5rem 1rem', background: '#DC2626', color: '#FFF', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem' }}>
                                             Delete ({selectedOrders.length})
@@ -1160,43 +1183,46 @@ const AdminDashboard = () => {
                                     </label>
                                 </div>
                             </div>
-                            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            <div style={{
+                                maxHeight: showOrderHistory ? '1000px' : '0',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.5s ease-in-out',
+                                opacity: showOrderHistory ? 1 : 0
+                            }}>
                                 {recentOrders.length > 0 ? recentOrders.map(order => (
                                     <div key={order._id} style={{
                                         padding: '1rem',
                                         borderBottom: '1px solid #E0E0E0',
                                         display: 'flex',
                                         justifyContent: 'space-between',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        transition: 'background-color 0.2s'
                                     }}>
-                                        <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedOrders.includes(order._id)}
-                                                    onChange={() => toggleSelectOrder(order._id)}
-                                                    style={{ accentColor: '#D4AF37', width: '16px', height: '16px' }}
-                                                />
-                                                <div>
-                                                    <p style={{ fontWeight: '700', color: '#1A1A1A', margin: '0 0 0.25rem 0' }}>
-                                                        {order.orderNumber}
-                                                    </p>
-                                                    <p style={{ fontSize: '0.85rem', color: '#888', margin: 0 }}>
-                                                        {order.customerName}
-                                                    </p>
-                                                </div>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedOrders.includes(order._id)}
+                                                onChange={() => toggleSelectOrder(order._id)}
+                                                style={{ accentColor: '#D4AF37', width: '16px', height: '16px' }}
+                                            />
+                                            <div>
+                                                <p style={{ fontWeight: '700', color: '#1A1A1A', margin: '0 0 0.25rem 0' }}>
+                                                    #{order._id.slice(-6).toUpperCase()}
+                                                </p>
+                                                <p style={{ fontSize: '0.85rem', color: '#888', margin: 0 }}>
+                                                    {new Date(order.createdAt).toLocaleDateString()}
+                                                </p>
                                             </div>
                                         </div>
-                                        <div style={{ textAlign: 'right' }}>
+                                        <div style={{ textAlign: 'right', marginRight: '1rem' }}>
                                             <p style={{ fontWeight: '700', color: '#D4AF37', margin: '0 0 0.25rem 0' }}>
                                                 ₦{order.totalAmount.toLocaleString()}
                                             </p>
                                             <span style={{
                                                 fontSize: '0.7rem',
-                                                padding: '0.25rem 0.5rem',
-                                                borderRadius: '4px',
-                                                backgroundColor: order.status === 'completed' ? '#22C55E' :
-                                                    order.status === 'processing' ? '#F59E0B' : '#888888',
+                                                padding: '0.2rem 0.5rem',
+                                                borderRadius: '12px',
+                                                backgroundColor: order.status === 'completed' ? '#10B981' : '#F59E0B',
                                                 color: '#FFFFFF',
                                                 fontWeight: '700'
                                             }}>
@@ -1245,7 +1271,27 @@ const AdminDashboard = () => {
                                 }}>
                                     Top Customers
                                 </h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                {/* Toggle Button */}
+                                <button
+                                    onClick={() => setShowCustomers(!showCustomers)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        color: showCustomers ? '#D4AF37' : '#888',
+                                        transition: 'color 0.3s'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                                        {showCustomers ? 'Collapse' : 'Expand'}
+                                    </span>
+                                    <ChevronDown size={20} style={{ transform: showCustomers ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                                </button>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
                                     {selectedCustomers.length > 0 && (
                                         <button onClick={deleteSelectedCustomers} style={{ padding: '0.5rem 1rem', background: '#DC2626', color: '#FFF', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem' }}>
                                             Delete ({selectedCustomers.length})
@@ -1262,7 +1308,12 @@ const AdminDashboard = () => {
                                     </label>
                                 </div>
                             </div>
-                            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            <div style={{
+                                maxHeight: showCustomers ? '1000px' : '0',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.5s ease-in-out',
+                                opacity: showCustomers ? 1 : 0
+                            }}>
                                 {customers.length > 0 ? customers.slice(0, 10).map(customer => (
                                     <div key={customer._id} style={{
                                         padding: '1rem',

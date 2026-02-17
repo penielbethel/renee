@@ -11,6 +11,7 @@ import Partners from './pages/Partners';
 import Legal from './pages/Legal';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+import Blog from './pages/Blog';
 
 // Subsidiaries
 import GlobalServices from './pages/Subsidiaries/GlobalServices';
@@ -57,6 +58,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/investments" element={<Investments />} />
           <Route path="/partners" element={<Partners />} />
+          <Route path="/blog" element={<Blog />} />
           <Route path="/privacy" element={<Legal />} />
           <Route path="/terms" element={<Legal />} />
           <Route path="/login" element={<Login />} />
