@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import { Handshake, Globe, ShoppingBag, Truck, Users } from 'lucide-react';
 
 const Partners = () => {
+    useEffect(() => {
+        document.title = "Partners | Renee Golden - Collaborative Agricultural Innovation";
+    }, []);
     return (
         <div className="partners-page">
             <Navbar />

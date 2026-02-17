@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 
 const Contact = () => {
+    useEffect(() => {
+        document.title = "Contact Us | Renee Golden Multi-ventures Limited";
+    }, []);
     return (
         <>
             <Navbar />

@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import { TrendingUp, PieChart, Landmark, Handshake, Shield, ArrowUpRight } from 'lucide-react';
 
 const Investments = () => {
+    useEffect(() => {
+        document.title = "Investments | Renee Golden - Strategic Growth and Industrial Opportunities";
+    }, []);
     return (
         <div className="investments-page">
             <Navbar />

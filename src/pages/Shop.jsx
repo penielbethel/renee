@@ -294,6 +294,7 @@ const Shop = () => {
 
   // Fetch products and active promos
   useEffect(() => {
+    document.title = "Shop | Renee Golden - Premium Natural Honey, Kuli-Kuli & Agricultural Products";
     const fetchData = async () => {
       try {
         const [prodRes, promoRes] = await Promise.all([

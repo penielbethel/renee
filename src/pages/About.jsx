@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import { Target, Eye, ShieldCheck, Award, Heart, CheckCircle } from 'lucide-react';
 
 const About = () => {
+    useEffect(() => {
+        document.title = "About Us | Renee Golden - Our Mission and Agricultural Vision";
+    }, []);
     return (
         <div className="about-page">
             <Navbar />
