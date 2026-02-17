@@ -356,7 +356,7 @@ const Home = () => {
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
                             <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden', position: 'relative' }}>
-                                    <img src="/images/Renee Kulikuli.jpg" alt="Renee Kulikuli" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src="/images/Renee Kulikuli.jpg" alt="Renee Kulikuli" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <div style={{
                                         position: 'absolute',
                                         top: '1rem',
@@ -388,7 +388,7 @@ const Home = () => {
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
                             <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden' }}>
-                                    <img src="/images/Renee Oil1.jpg" alt="Renee Oils" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src="/images/Renee Oil1.jpg" alt="Renee Oils" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                                 <div className="p-6">
                                     <h3 style={{ color: '#D4AF37', fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>Renee Oils (Emi Kuli)</h3>
@@ -406,7 +406,7 @@ const Home = () => {
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
                             <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden' }}>
-                                    <img src="/images/Renee Tigernut.jpg" alt="Renee Tigernuts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src="/images/Renee Tigernut.jpg" alt="Renee Tigernuts" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                                 <div className="p-6">
                                     <h3 style={{ color: '#D4AF37', fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>Renee Tigernuts Drinks</h3>
@@ -424,7 +424,7 @@ const Home = () => {
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
                             <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden', position: 'relative' }}>
-                                    <img src="/images/Renee Honey.jpg" alt="Renee Honey" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src="/images/Renee Honey.jpg" alt="Renee Honey" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <div style={{
                                         position: 'absolute',
                                         top: '1rem',
@@ -456,7 +456,7 @@ const Home = () => {
                         <Link to="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>
                             <div className="product-card card">
                                 <div style={{ height: '250px', overflow: 'hidden' }}>
-                                    <img src="/images/renee Rice.jpg" alt="Renee Rice" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src="/images/renee Rice.jpg" alt="Renee Rice" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                                 <div className="p-6">
                                     <h3 style={{ color: '#D4AF37', fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>Renee Rice</h3>
@@ -483,7 +483,7 @@ const Home = () => {
                             <ShoppingBag size={48} style={{ marginBottom: '1rem' }} />
                             <h3 className="mb-4" style={{ color: 'white', fontSize: '1.75rem', fontWeight: '700' }}>Wholesale & Bulk Orders</h3>
                             <p className="mb-6 max-w-xs mx-auto" style={{ color: '#ffffff', fontSize: '1.1rem' }}>We supply supermarkets, distributors, and industrial kitchens.</p>
-                            <a href="/shop" className="btn" style={{
+                            <Link to="/shop" className="btn" style={{
                                 backgroundColor: '#fff',
                                 color: '#D4AF37',
                                 padding: '1rem 2rem',
@@ -500,7 +500,7 @@ const Home = () => {
                             >
                                 Place an Order
                                 <ArrowRight size={20} />
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -548,7 +548,7 @@ const Home = () => {
                             </div>
                             <h3 style={{ color: '#D4AF37', fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem' }}>Renee Golden Global Services</h3>
                             <p className="mb-4" style={{ color: '#666', lineHeight: '1.6' }}>End-to-end agricultural production, mechanized farming, and food processing.</p>
-                            <a href="/subsidiaries/global-services" className="btn btn-outline" style={{
+                            <Link to="/subsidiaries/global-services" className="btn btn-outline" style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.5rem',
@@ -571,7 +571,7 @@ const Home = () => {
                             >
                                 Learn More
                                 <ArrowRight size={18} />
-                            </a>
+                            </Link>
                         </div>
 
                         <div style={{
@@ -604,7 +604,7 @@ const Home = () => {
                             </div>
                             <h3 style={{ color: '#D4AF37', fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem' }}>Renee Rural Empowerment</h3>
                             <p className="mb-4" style={{ color: '#666', lineHeight: '1.6' }}>Empowering rural farmers through training, shared machinery, and market access.</p>
-                            <a href="/subsidiaries/rural-empowerment" className="btn btn-outline" style={{
+                            <Link to="/subsidiaries/rural-empowerment" className="btn btn-outline" style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.5rem',
@@ -627,7 +627,7 @@ const Home = () => {
                             >
                                 Learn More
                                 <ArrowRight size={18} />
-                            </a>
+                            </Link>
                         </div>
 
                         <div style={{
@@ -660,7 +660,7 @@ const Home = () => {
                             </div>
                             <h3 style={{ color: '#D4AF37', fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem' }}>HRL Estate Services</h3>
                             <p className="mb-4" style={{ color: '#666', lineHeight: '1.6' }}>Strategic real estate solutions supporting agribusiness infrastructure.</p>
-                            <a href="/subsidiaries/estate-services" className="btn btn-outline" style={{
+                            <Link to="/subsidiaries/estate-services" className="btn btn-outline" style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.5rem',
@@ -683,7 +683,7 @@ const Home = () => {
                             >
                                 Learn More
                                 <ArrowRight size={18} />
-                            </a>
+                            </Link>
                         </div>
 
                     </div>

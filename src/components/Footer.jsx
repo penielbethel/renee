@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 
 const Footer = ({
@@ -61,7 +62,13 @@ const Footer = ({
                         {quickLinks ? (
                             <ul>
                                 {quickLinks.map((link, index) => (
-                                    <li key={index}><a href={link.url}>{link.label}</a></li>
+                                    <li key={index}>
+                                        {link.url.startsWith('/') ? (
+                                            <Link to={link.url}>{link.label}</Link>
+                                        ) : (
+                                            <a href={link.url}>{link.label}</a>
+                                        )}
+                                    </li>
                                 ))}
                             </ul>
                         ) : (
@@ -70,9 +77,9 @@ const Footer = ({
 
                         {ctaText && (
                             <div style={{ marginTop: '1.5rem' }}>
-                                <a href={ctaLink || '#contact'} className="btn btn-primary">
+                                <Link to={ctaLink || '/contact'} className="btn btn-primary">
                                     {ctaText}
-                                </a>
+                                </Link>
                             </div>
                         )}
                     </div>
