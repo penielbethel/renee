@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { connectDB } from './_lib/db.js';
-import { User, Token, logActivity } from './_lib/models.js';
-import { applyCors } from './_lib/cors.js';
+import { connectDB } from '../_lib/db.js';
+import { User, Token, logActivity } from '../_lib/models.js';
+import { applyCors } from '../_lib/cors.js';
 
 export default async function handler(req, res) {
     if (applyCors(req, res)) return;

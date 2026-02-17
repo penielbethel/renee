@@ -1,7 +1,7 @@
-import { connectDB } from './_lib/db.js';
-import { Product, Promo } from './_lib/models.js';
-import { applyCors } from './_lib/cors.js';
-import { STATIC_PRODUCTS } from './_lib/static-products.js';
+import { connectDB } from '../_lib/db.js';
+import { Product, Promo } from '../_lib/models.js';
+import { applyCors } from '../_lib/cors.js';
+import { STATIC_PRODUCTS } from '../_lib/static-products.js';
 
 export default async function handler(req, res) {
     if (applyCors(req, res)) return;
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     try {
         await connectDB();
 
-        if (endpoint === 'products') {
+        if (endpoint === 'products' || endpoint === 'public') {
             try {
                 const products = await Product.find().sort({ createdAt: 1 });
                 return res.json(products);

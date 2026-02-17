@@ -1,7 +1,7 @@
-import { connectDB } from './_lib/db.js';
-import { Order, Customer, Token, User, Promo, Coupon, logActivity } from './_lib/models.js';
-import { requireAuth } from './_lib/auth.js';
-import { applyCors } from './_lib/cors.js';
+import { connectDB } from '../_lib/db.js';
+import { Order, Customer, Token, User, Promo, Coupon, logActivity } from '../_lib/models.js';
+import { requireAuth } from '../_lib/auth.js';
+import { applyCors } from '../_lib/cors.js';
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
@@ -10,7 +10,6 @@ export default async function handler(req, res) {
     const path = req.url.split('?')[0];
     const endpoint = path.split('/').pop();
 
-    // Route based on endpoint name
     try {
         await connectDB();
 
