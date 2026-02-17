@@ -262,6 +262,24 @@ export default async function handler(req, res) {
                 }
             }
 
+            // 6. Products
+            if (endpoint === 'products') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                if (req.method === 'PATCH') {
+                    const productId = pathParts[3];
+                    if (!productId) return res.status(400).json({ message: 'Product ID required' });
+                    const product = await Product.findOneAndUpdate(
+                        { id: productId },
+                        { $set: { ...req.body, updatedAt: new Date() } },
+                        { new: true }
+                    );
+                    if (!product) return res.status(404).json({ message: 'Product not found' });
+                    await logActivity(user.id, user.username, 'UPDATE_PRODUCT', `Updated product ${productId}`);
+                    return res.json(product);
+                }
+            }
+
             // --- SuperAdmin Only ---
             // 6. Tokens
             if (endpoint === 'tokens') {
