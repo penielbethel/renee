@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { connectDB } from '../_api_lib/db.js';
-import { User, Token, logActivity, Order, Customer, Promo, Coupon, Product } from '../_api_lib/models.js';
+import { User, Token, logActivity, Order, Customer, Promo, Coupon, Product, ActivityLog } from '../_api_lib/models.js';
 import { applyCors } from '../_api_lib/cors.js';
 import { requireAuth } from '../_api_lib/auth.js';
 import { STATIC_PRODUCTS } from '../_api_lib/static-products.js';
@@ -242,7 +242,9 @@ export default async function handler(req, res) {
                 if (!user) return;
                 if (req.method === 'GET') return res.json(await User.find({ role: 'admin' }).select('-password'));
                 if (req.method === 'DELETE') {
-                    await User.findByIdAndDelete(req.query.id);
+                    const id = req.query.id || pathParts[3];
+                    if (!id) return res.status(400).json({ message: 'User ID required' });
+                    await User.findByIdAndDelete(id);
                     return res.json({ message: 'Admin user deleted successfully' });
                 }
             }
