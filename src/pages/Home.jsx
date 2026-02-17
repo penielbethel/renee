@@ -209,39 +209,39 @@ const Home = () => {
 
             {/* Stats Section - New */}
             <section style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%)',
+                background: 'linear-gradient(135deg, #1A1A1A 0%, #333333 100%)',
                 color: '#fff',
-                padding: '3rem 0'
+                padding: '5rem 0'
             }}>
                 <div className="container">
-                    <div className="grid grid-cols-4 gap-4 text-center">
-                        <div>
-                            <div style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                    <div className="grid grid-cols-4 gap-8 text-center">
+                        <div style={{ animation: 'flyInLeft 0.8s ease backwards', animationDelay: '0.1s' }}>
+                            <div style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '0.5rem', color: '#D4AF37', animation: 'pulseGold 3s infinite ease-in-out' }}>
                                 <Sparkles size={32} style={{ display: 'inline', marginRight: '0.5rem' }} />
                                 7+
                             </div>
-                            <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>Premium Products</p>
+                            <p style={{ fontSize: '1.1rem', color: '#FFF', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Premium Products</p>
                         </div>
-                        <div>
-                            <div style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                        <div style={{ animation: 'flyInLeft 0.8s ease backwards', animationDelay: '0.3s' }}>
+                            <div style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '0.5rem', color: '#D4AF37', animation: 'pulseGold 3s infinite ease-in-out', animationDelay: '0.5s' }}>
                                 <TrendingUp size={32} style={{ display: 'inline', marginRight: '0.5rem' }} />
                                 100%
                             </div>
-                            <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>Organic & Natural</p>
+                            <p style={{ fontSize: '1.1rem', color: '#FFF', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Organic & Natural</p>
                         </div>
-                        <div>
-                            <div style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                        <div style={{ animation: 'flyInRight 0.8s ease backwards', animationDelay: '0.3s' }}>
+                            <div style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '0.5rem', color: '#D4AF37', animation: 'pulseGold 3s infinite ease-in-out', animationDelay: '1s' }}>
                                 <Award size={32} style={{ display: 'inline', marginRight: '0.5rem' }} />
                                 5★
                             </div>
-                            <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>Customer Rated</p>
+                            <p style={{ fontSize: '1.1rem', color: '#FFF', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Customer Rated</p>
                         </div>
-                        <div>
-                            <div style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                        <div style={{ animation: 'flyInRight 0.8s ease backwards', animationDelay: '0.1s' }}>
+                            <div style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '0.5rem', color: '#D4AF37', animation: 'pulseGold 3s infinite ease-in-out', animationDelay: '1.5s' }}>
                                 <Shield size={32} style={{ display: 'inline', marginRight: '0.5rem' }} />
                                 ISO
                             </div>
-                            <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>Quality Standards</p>
+                            <p style={{ fontSize: '1.1rem', color: '#FFF', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Quality Standards</p>
                         </div>
                     </div>
                 </div>
