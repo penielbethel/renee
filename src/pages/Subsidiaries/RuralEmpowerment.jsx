@@ -13,7 +13,7 @@ const RuralEmpowerment = () => {
             <Hero
                 title="Renee Rural Empowerment Initiative"
                 subtitle="Empowering rural farmers through sustainable agricultural training and market linkages."
-                bgImage="https://images.unsplash.com/photo-1595841697157-5d554032d88c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+                bgImage="https://images.unsplash.com/photo-1499750310159-5b988371c0b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
                 ctaButtons={[{ label: 'Register for Training', link: '#register' }]}
             />
 

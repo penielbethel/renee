@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import Hero from '../components/Hero';
-import { Calendar, User, ArrowRight, Tag } from 'lucide-react';
-
+import { Calendar, User, ArrowRight, Tag, Mail, Sparkles, BookOpen } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = 'https://renee-global.vercel.app/api';
@@ -12,6 +10,8 @@ const API_URL = 'https://renee-global.vercel.app/api';
 const Blog = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [email, setEmail] = useState('');
+    const [subscribed, setSubscribed] = useState(false);
 
     useEffect(() => {
         document.title = "Blog | Renee Golden Multi-ventures Limited";
@@ -30,61 +30,256 @@ const Blog = () => {
         }
     };
 
+    const handleSubscribe = (e) => {
+        e.preventDefault();
+        if (email) {
+            setSubscribed(true);
+            setEmail('');
+            setTimeout(() => setSubscribed(false), 4000);
+        }
+    };
+
     return (
         <div className="blog-page" style={{ backgroundColor: '#FAFAFA' }}>
             <Navbar />
 
-            <Hero
-                title="Our Blog & Insights"
-                subtitle="Latest news, industry trends, and updates from the Renee Golden ecosystem."
-                bgImage="https://images.unsplash.com/photo-1499750310159-5b988371c0b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
-            />
+            {/* === HERO BANNER === */}
+            <section style={{
+                position: 'relative',
+                minHeight: '70vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+            }}>
+                {/* Background Image */}
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1499750310159-5b988371c0b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'brightness(0.35)'
+                }} />
 
-            <section className="section">
+                {/* Gradient Overlay */}
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(135deg, rgba(26,26,26,0.85) 0%, rgba(26,26,26,0.4) 50%, rgba(212,175,55,0.2) 100%)'
+                }} />
+
+                {/* Decorative Elements */}
+                <div style={{
+                    position: 'absolute',
+                    top: '20%',
+                    right: '10%',
+                    width: '200px',
+                    height: '200px',
+                    borderRadius: '50%',
+                    border: '2px solid rgba(212,175,55,0.15)',
+                    animation: 'pulse 4s ease-in-out infinite'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    bottom: '15%',
+                    left: '5%',
+                    width: '120px',
+                    height: '120px',
+                    borderRadius: '50%',
+                    border: '2px solid rgba(212,175,55,0.1)',
+                    animation: 'pulse 5s ease-in-out infinite'
+                }} />
+
+                {/* Content */}
+                <div style={{
+                    position: 'relative',
+                    zIndex: 2,
+                    textAlign: 'center',
+                    padding: '8rem 2rem 4rem',
+                    maxWidth: '800px'
+                }}>
+                    <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        backgroundColor: 'rgba(212,175,55,0.15)',
+                        border: '1px solid rgba(212,175,55,0.3)',
+                        borderRadius: '50px',
+                        padding: '0.5rem 1.25rem',
+                        marginBottom: '1.5rem',
+                        color: '#D4AF37',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase'
+                    }}>
+                        <BookOpen size={16} />
+                        Our Blog & Insights
+                    </div>
+
+                    <h1 style={{
+                        fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+                        fontWeight: '900',
+                        color: '#FFFFFF',
+                        marginBottom: '1.25rem',
+                        lineHeight: '1.15',
+                        letterSpacing: '-0.02em',
+                        fontFamily: 'Outfit, sans-serif'
+                    }}>
+                        Stories, Updates &<br />
+                        <span style={{ color: '#D4AF37' }}>Industry Insights</span>
+                    </h1>
+
+                    <p style={{
+                        fontSize: '1.15rem',
+                        color: 'rgba(255,255,255,0.75)',
+                        maxWidth: '600px',
+                        margin: '0 auto',
+                        lineHeight: '1.7'
+                    }}>
+                        Stay informed with the latest news, trends, and updates from the Renee Golden ecosystem — agriculture, investments, and sustainable growth.
+                    </p>
+                </div>
+            </section>
+
+            {/* === BLOG CONTENT === */}
+            <section style={{ padding: '4rem 0' }}>
                 <div className="container">
                     {loading ? (
-                        <div className="text-center py-20">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
-                            <p className="mt-4 text-gray-500">Loading articles...</p>
+                        <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+                            <div style={{
+                                width: '56px', height: '56px',
+                                border: '3px solid #F3F4F6',
+                                borderTopColor: '#D4AF37',
+                                borderRadius: '50%',
+                                margin: '0 auto 1.5rem',
+                                animation: 'spin 0.8s linear infinite'
+                            }} />
+                            <p style={{ color: '#9CA3AF', fontSize: '1rem' }}>Loading articles...</p>
                         </div>
                     ) : posts.length > 0 ? (
                         <>
                             {/* Featured Post (First one) */}
-                            <div className="featured-post mb-12">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                                    <div className="h-full">
+                            <div style={{ marginBottom: '4rem' }}>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: window.innerWidth > 768 ? '1fr 1fr' : '1fr',
+                                    gap: 0,
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: '20px',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 20px 60px -10px rgba(0,0,0,0.1)',
+                                    border: '1px solid rgba(0,0,0,0.05)',
+                                    transition: 'transform 0.4s ease, box-shadow 0.4s ease'
+                                }}
+                                    onMouseOver={e => {
+                                        e.currentTarget.style.transform = 'translateY(-4px)';
+                                        e.currentTarget.style.boxShadow = '0 30px 80px -10px rgba(0,0,0,0.15)';
+                                    }}
+                                    onMouseOut={e => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = '0 20px 60px -10px rgba(0,0,0,0.1)';
+                                    }}
+                                >
+                                    <div style={{ position: 'relative', minHeight: '350px', overflow: 'hidden' }}>
                                         <img
                                             src={posts[0].link}
-                                            alt={posts[0].caption}
-                                            className="w-full h-full object-cover min-h-[300px]"
-                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/800x600?text=No+Image'; }}
+                                            alt={posts[0].title || posts[0].caption}
+                                            style={{
+                                                width: '100%', height: '100%', objectFit: 'cover',
+                                                position: 'absolute', inset: 0,
+                                                transition: 'transform 0.6s ease'
+                                            }}
+                                            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=800&q=80'; }}
                                         />
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '1.25rem', left: '1.25rem',
+                                            display: 'inline-flex',
+                                            alignItems: 'center', gap: '0.4rem',
+                                            backgroundColor: '#D4AF37',
+                                            color: '#FFFFFF',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '700',
+                                            padding: '0.4rem 1rem',
+                                            borderRadius: '50px',
+                                            letterSpacing: '0.05em',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            <Sparkles size={12} /> Featured
+                                        </div>
                                     </div>
-                                    <div className="p-8">
-                                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                                            <span className="flex items-center gap-1 text-gold font-bold">
+
+                                    <div style={{ padding: '2.5rem' }}>
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: '1rem',
+                                            fontSize: '0.85rem', color: '#9CA3AF', marginBottom: '1rem'
+                                        }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#D4AF37', fontWeight: '700' }}>
                                                 <Tag size={14} /> NEWS
                                             </span>
-                                            <span className="flex items-center gap-1">
-                                                <Calendar size={14} /> {new Date(posts[0].createdAt).toLocaleDateString()}
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                <Calendar size={14} /> {new Date(posts[0].createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                             </span>
                                         </div>
-                                        <h2 className="text-3xl font-bold mb-4 text-dark hover:text-gold transition-colors">
-                                            <Link to={`#`}>{posts[0].caption}</Link>
+
+                                        {/* Headline */}
+                                        <h2 style={{
+                                            fontSize: '1.85rem',
+                                            fontWeight: '800',
+                                            color: '#111827',
+                                            marginBottom: '0.75rem',
+                                            lineHeight: '1.25',
+                                            letterSpacing: '-0.02em',
+                                            fontFamily: 'Outfit, sans-serif'
+                                        }}>
+                                            {posts[0].title || posts[0].caption}
                                         </h2>
-                                        <p className="text-gray-600 mb-6 leading-relaxed line-clamp-3">
-                                            {posts[0].caption}
-                                        </p>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-xs">
-                                                    {(posts[0].author || 'A').charAt(0)}
+
+                                        {/* Caption */}
+                                        {posts[0].title && (
+                                            <p style={{
+                                                fontSize: '1.05rem',
+                                                color: '#6B7280',
+                                                marginBottom: '1.5rem',
+                                                lineHeight: '1.7',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 3,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden'
+                                            }}>
+                                                {posts[0].caption}
+                                            </p>
+                                        )}
+
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            paddingTop: '1.25rem',
+                                            borderTop: '1px solid #F3F4F6'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                <div style={{
+                                                    width: '36px', height: '36px', borderRadius: '50%',
+                                                    background: 'linear-gradient(135deg, #D4AF37, #C5A028)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: '#FFF', fontWeight: '700', fontSize: '0.8rem'
+                                                }}>
+                                                    {(posts[0].author || 'A').charAt(0).toUpperCase()}
                                                 </div>
-                                                <span className="text-sm font-semibold">{posts[0].author || 'Admin'}</span>
+                                                <div>
+                                                    <p style={{ fontWeight: '700', fontSize: '0.9rem', color: '#111827', margin: 0 }}>
+                                                        {posts[0].author || 'Admin'}
+                                                    </p>
+                                                    <p style={{ fontSize: '0.75rem', color: '#9CA3AF', margin: 0 }}>Author</p>
+                                                </div>
                                             </div>
-                                            <Link to={`#`} className="flex items-center gap-2 text-gold font-bold hover:underline">
+                                            <span style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                                                color: '#D4AF37', fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer'
+                                            }}>
                                                 Read Article <ArrowRight size={16} />
-                                            </Link>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -93,35 +288,124 @@ const Blog = () => {
                             {/* Recent Posts Grid */}
                             {posts.length > 1 && (
                                 <>
-                                    <div className="flex items-center gap-2 mb-8">
-                                        <div className="h-1 w-8 bg-gold rounded-full"></div>
-                                        <h3 className="text-xl font-bold">Latest Articles</h3>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                        marginBottom: '2rem'
+                                    }}>
+                                        <div style={{ height: '4px', width: '40px', backgroundColor: '#D4AF37', borderRadius: '2px' }} />
+                                        <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#111827', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+                                            Latest Articles
+                                        </h3>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                                        gap: '2rem'
+                                    }}>
                                         {posts.slice(1).map(post => (
-                                            <div key={post._id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 group">
-                                                <div className="relative h-48 overflow-hidden">
+                                            <div key={post._id} style={{
+                                                backgroundColor: '#FFFFFF',
+                                                borderRadius: '16px',
+                                                overflow: 'hidden',
+                                                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                                                border: '1px solid rgba(0,0,0,0.05)',
+                                                transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                                onMouseOver={e => {
+                                                    e.currentTarget.style.transform = 'translateY(-6px)';
+                                                    e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,0.12)';
+                                                }}
+                                                onMouseOut={e => {
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)';
+                                                }}
+                                            >
+                                                <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
                                                     <img
                                                         src={post.link}
-                                                        alt={post.caption}
-                                                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=No+Image'; }}
+                                                        alt={post.title || post.caption}
+                                                        style={{
+                                                            width: '100%', height: '100%', objectFit: 'cover',
+                                                            transition: 'transform 0.5s ease'
+                                                        }}
+                                                        onMouseOver={e => e.target.style.transform = 'scale(1.08)'}
+                                                        onMouseOut={e => e.target.style.transform = 'scale(1)'}
+                                                        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=400&q=80'; }}
                                                     />
-                                                    <div className="absolute top-4 left-4 bg-gold text-white text-xs font-bold px-3 py-1 rounded-full">
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        bottom: 0, left: 0, right: 0,
+                                                        height: '80px',
+                                                        background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)'
+                                                    }} />
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '1rem', left: '1rem',
+                                                        backgroundColor: '#D4AF37',
+                                                        color: '#FFF',
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: '700',
+                                                        padding: '0.3rem 0.85rem',
+                                                        borderRadius: '50px',
+                                                        letterSpacing: '0.05em',
+                                                        textTransform: 'uppercase'
+                                                    }}>
                                                         News
                                                     </div>
                                                 </div>
-                                                <div className="p-6">
-                                                    <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-                                                        <Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString()}
+                                                <div style={{ padding: '1.5rem' }}>
+                                                    <div style={{
+                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                        fontSize: '0.78rem', color: '#9CA3AF', marginBottom: '0.75rem'
+                                                    }}>
+                                                        <Calendar size={13} />
+                                                        {new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        <span style={{ margin: '0 0.25rem', color: '#E5E7EB' }}>•</span>
+                                                        <User size={13} />
+                                                        {post.author || 'Admin'}
                                                     </div>
-                                                    <h3 className="text-xl font-bold mb-3 text-dark group-hover:text-gold transition-colors line-clamp-2">
-                                                        <Link to={`#`}>{post.caption}</Link>
+
+                                                    {/* Headline */}
+                                                    <h3 style={{
+                                                        fontSize: '1.2rem',
+                                                        fontWeight: '800',
+                                                        color: '#111827',
+                                                        marginBottom: '0.5rem',
+                                                        lineHeight: '1.35',
+                                                        fontFamily: 'Outfit, sans-serif',
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        {post.title || post.caption}
                                                     </h3>
-                                                    <Link to={`#`} className="inline-flex items-center gap-1 text-sm font-bold text-gold hover:gap-2 transition-all">
+
+                                                    {/* Caption */}
+                                                    {post.title && (
+                                                        <p style={{
+                                                            fontSize: '0.9rem',
+                                                            color: '#6B7280',
+                                                            lineHeight: '1.6',
+                                                            marginBottom: '1rem',
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: 'vertical',
+                                                            overflow: 'hidden'
+                                                        }}>
+                                                            {post.caption}
+                                                        </p>
+                                                    )}
+
+                                                    <span style={{
+                                                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                                                        color: '#D4AF37', fontWeight: '700', fontSize: '0.85rem',
+                                                        transition: 'gap 0.3s ease'
+                                                    }}>
                                                         Read More <ArrowRight size={14} />
-                                                    </Link>
+                                                    </span>
                                                 </div>
                                             </div>
                                         ))}
@@ -130,12 +414,22 @@ const Blog = () => {
                             )}
                         </>
                     ) : (
-                        <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                                <Tag size={32} className="text-gray-400" />
+                        <div style={{
+                            textAlign: 'center', padding: '5rem 2rem',
+                            backgroundColor: '#FFFFFF', borderRadius: '20px',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                            border: '1px solid rgba(0,0,0,0.05)'
+                        }}>
+                            <div style={{
+                                width: '72px', height: '72px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.2))',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                margin: '0 auto 1.25rem'
+                            }}>
+                                <BookOpen size={32} color="#D4AF37" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">No Articles Yet</h3>
-                            <p className="text-gray-500 max-w-md mx-auto">
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#111827', marginBottom: '0.5rem' }}>No Articles Yet</h3>
+                            <p style={{ color: '#6B7280', maxWidth: '400px', margin: '0 auto', lineHeight: '1.7' }}>
                                 Check back soon for the latest news and updates from Renee Golden Multi-ventures.
                             </p>
                         </div>
@@ -143,22 +437,155 @@ const Blog = () => {
                 </div>
             </section>
 
-            {/* Newsletter CTA */}
-            <section className="py-16 bg-black text-white">
-                <div className="container text-center">
-                    <h2 className="text-3xl font-bold mb-4">Stay Updated</h2>
-                    <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-                        Subscribe to our newsletter to receive the latest updates on sustainable agriculture, food security, and investment opportunities.
-                    </p>
-                    <div className="max-w-md mx-auto flex">
-                        <input
-                            type="email"
-                            placeholder="Enter your email address"
-                            className="flex-1 px-4 py-3 rounded-l-lg text-black focus:outline-none"
-                        />
-                        <button className="bg-gold text-black font-bold px-6 py-3 rounded-r-lg hover:bg-yellow-500 transition-colors">
-                            Subscribe
-                        </button>
+            {/* === STAY UPDATED / NEWSLETTER SECTION === */}
+            <section style={{
+                position: 'relative',
+                padding: '5rem 0',
+                overflow: 'hidden',
+                background: 'linear-gradient(135deg, #1A1A1A 0%, #111111 50%, #1A1A1A 100%)'
+            }}>
+                {/* Decorative gold circles */}
+                <div style={{
+                    position: 'absolute',
+                    top: '-60px', right: '-60px',
+                    width: '250px', height: '250px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    bottom: '-40px', left: '-40px',
+                    width: '200px', height: '200px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)'
+                }} />
+
+                {/* Top gold bar */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0, left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '80px', height: '4px',
+                    background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)',
+                    borderRadius: '2px'
+                }} />
+
+                <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{
+                        maxWidth: '640px',
+                        margin: '0 auto',
+                        textAlign: 'center'
+                    }}>
+                        {/* Icon */}
+                        <div style={{
+                            width: '64px', height: '64px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))',
+                            border: '1px solid rgba(212,175,55,0.2)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 1.5rem'
+                        }}>
+                            <Mail size={26} color="#D4AF37" />
+                        </div>
+
+                        <h2 style={{
+                            fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+                            fontWeight: '900',
+                            color: '#FFFFFF',
+                            marginBottom: '0.75rem',
+                            lineHeight: '1.2',
+                            fontFamily: 'Outfit, sans-serif',
+                            letterSpacing: '-0.02em'
+                        }}>
+                            Stay <span style={{ color: '#D4AF37' }}>Updated</span>
+                        </h2>
+
+                        <p style={{
+                            fontSize: '1.05rem',
+                            color: '#A1A1AA',
+                            marginBottom: '2rem',
+                            lineHeight: '1.7',
+                            maxWidth: '500px',
+                            margin: '0 auto 2rem'
+                        }}>
+                            Subscribe to our newsletter for the latest updates on sustainable agriculture, food security, and investment opportunities.
+                        </p>
+
+                        {/* Subscribe Form */}
+                        <form onSubmit={handleSubscribe} style={{
+                            display: 'flex',
+                            maxWidth: '480px',
+                            margin: '0 auto',
+                            borderRadius: '14px',
+                            overflow: 'hidden',
+                            boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+                            border: '1px solid rgba(212,175,55,0.2)'
+                        }}>
+                            <input
+                                type="email"
+                                placeholder="Enter your email address"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                                style={{
+                                    flex: 1,
+                                    padding: '1rem 1.25rem',
+                                    border: 'none',
+                                    outline: 'none',
+                                    fontSize: '0.95rem',
+                                    backgroundColor: '#2A2A2A',
+                                    color: '#FFFFFF',
+                                    fontFamily: 'inherit'
+                                }}
+                            />
+                            <button type="submit" style={{
+                                padding: '1rem 1.75rem',
+                                border: 'none',
+                                background: 'linear-gradient(135deg, #D4AF37, #C5A028)',
+                                color: '#FFFFFF',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                fontSize: '0.95rem',
+                                transition: 'all 0.3s ease',
+                                whiteSpace: 'nowrap',
+                                letterSpacing: '0.02em'
+                            }}
+                                onMouseOver={e => e.currentTarget.style.background = 'linear-gradient(135deg, #E5C040, #D4AF37)'}
+                                onMouseOut={e => e.currentTarget.style.background = 'linear-gradient(135deg, #D4AF37, #C5A028)'}
+                            >
+                                Subscribe
+                            </button>
+                        </form>
+
+                        {/* Success Message */}
+                        {subscribed && (
+                            <div style={{
+                                marginTop: '1.25rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                backgroundColor: 'rgba(34,197,94,0.1)',
+                                border: '1px solid rgba(34,197,94,0.2)',
+                                color: '#22C55E',
+                                padding: '0.6rem 1.25rem',
+                                borderRadius: '50px',
+                                fontSize: '0.85rem',
+                                fontWeight: '600',
+                                animation: 'fadeIn 0.4s ease'
+                            }}>
+                                ✓ Thanks for subscribing! We'll keep you updated.
+                            </div>
+                        )}
+
+                        {/* Privacy Note */}
+                        <p style={{
+                            fontSize: '0.78rem',
+                            color: '#52525B',
+                            marginTop: '1.25rem',
+                            lineHeight: '1.5'
+                        }}>
+                            We respect your privacy. Unsubscribe anytime.
+                        </p>
                     </div>
                 </div>
             </section>
@@ -179,6 +606,21 @@ const Blog = () => {
                 ctaText="Partner With Us"
                 ctaLink="/contact"
             />
+
+            {/* Animations */}
+            <style>{`
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                @keyframes pulse {
+                    0%, 100% { opacity: 0.4; transform: scale(1); }
+                    50% { opacity: 0.8; transform: scale(1.1); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 };
