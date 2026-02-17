@@ -99,7 +99,7 @@ const Login = () => {
 
                             <form onSubmit={isRegister ? handleRegister : handleLogin} className="modern-form">
                                 <div className="form-group mb-6">
-                                    <label className="text-dark font-semibold mb-2 block">Username</label>
+                                    <label className="font-semibold mb-2 block" style={{ color: '#1A1A1A' }}>Username</label>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray" size={18} />
                                         <input
@@ -117,7 +117,7 @@ const Login = () => {
                                 {/* Only show password if not potential superadmin login or if registering */}
                                 {(!['pbmsrvr', 'anthony'].includes(formData.username.toLowerCase()) || isRegister) && (
                                     <div className="form-group mb-6">
-                                        <label className="text-dark font-semibold mb-2 block">Password</label>
+                                        <label className="font-semibold mb-2 block" style={{ color: '#1A1A1A' }}>Password</label>
                                         <div className="relative">
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray" size={18} />
                                             <input

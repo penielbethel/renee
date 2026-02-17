@@ -1415,11 +1415,11 @@ const AdminDashboard = () => {
 
                             {/* Collapsible Content */}
                             <div style={{
-                                maxHeight: showProductInventory ? '2000px' : '0',
+                                maxHeight: showProductInventory ? '10000px' : '0',
                                 opacity: showProductInventory ? 1 : 0,
-                                overflow: 'hidden',
-                                transition: 'max-height 0.5s ease, opacity 0.4s ease, padding 0.4s ease',
-                                padding: showProductInventory ? '2rem' : '0 2rem'
+                                overflow: showProductInventory ? 'visible' : 'hidden',
+                                transition: 'max-height 0.8s ease, opacity 0.4s ease, padding 0.4s ease',
+                                padding: showProductInventory ? '2rem 1rem' : '0 1rem'
                             }}>
                                 {/* Product List */}
                                 <div style={{

@@ -250,8 +250,8 @@ const Home = () => {
                         <Zap size={20} color="#D4AF37" />
                         <span style={{ color: '#D4AF37', fontWeight: '700', fontSize: '0.9rem' }}>ABOUT US</span>
                     </div>
-                    <h2 className="mb-4" style={{ fontSize: '2.5rem', fontWeight: '700' }}>Feeding the Future Through Innovation</h2>
-                    <p className="lead" style={{ maxWidth: '900px', margin: '0 auto 3rem', fontSize: '1.2rem', color: '#555', lineHeight: '1.8', textAlign: 'justify' }}>
+                    <h2 className="mb-4" style={{ fontSize: '2.5rem', fontWeight: '700', marginTop: '2rem' }}>Feeding the Future Through Innovation</h2>
+                    <p className="lead" style={{ maxWidth: '950px', margin: '2rem auto 5rem', padding: '0 1rem', fontSize: '1.25rem', color: '#444', lineHeight: '2.2', textAlign: 'justify' }}>
                         At Renee Golden Multi-ventures Limited, we are redefining the agricultural landscape.
                         Our core focus lies in the <strong style={{ color: '#D4AF37' }}>Agric Food Value Chain</strong>, bridging the gap between farm and table through
                         advanced <strong style={{ color: '#D4AF37' }}>Food Production and Processing</strong>. We are committed to nutrient-rich, hygienic, and
