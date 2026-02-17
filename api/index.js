@@ -280,6 +280,44 @@ export default async function handler(req, res) {
                 }
             }
 
+            // 7. Reports
+            if (endpoint === 'reports') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                const sub = pathParts[3];
+                if (sub === 'sales') {
+                    const { startDate, endDate } = req.query;
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    const orders = await Order.find({ createdAt: { $gte: start, $lte: end } });
+                    const completed = orders.filter(o => o.status === 'completed');
+                    const revenue = completed.reduce((s, o) => s + o.totalAmount, 0);
+                    const customersCount = await Customer.countDocuments();
+                    return res.json({
+                        totalRevenue: revenue,
+                        totalOrders: orders.length,
+                        completedOrders: completed.length,
+                        pendingOrders: orders.filter(o => o.status === 'pending').length,
+                        totalCustomers: customersCount,
+                        orders
+                    });
+                }
+            }
+
+            // 8. Search
+            if (endpoint === 'search') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                const { q } = req.query;
+                if (!q) return res.json({ orders: [], customers: [] });
+                const regex = new RegExp(q, 'i');
+                const [orders, customers] = await Promise.all([
+                    Order.find({ $or: [{ orderNumber: regex }, { customerName: regex }, { customerEmail: regex }] }).limit(20),
+                    Customer.find({ $or: [{ name: regex }, { email: regex }, { phone: regex }] }).limit(20)
+                ]);
+                return res.json({ orders, customers });
+            }
+
             // --- SuperAdmin Only ---
             // 6. Tokens
             if (endpoint === 'tokens') {
