@@ -59,6 +59,27 @@ const AdminDashboard = () => {
         usageLimit: 1
     });
 
+    // Custom Modals & Notifications
+    const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: () => { } });
+    const [notify, setNotify] = useState({ show: false, message: '', type: 'success' });
+
+    const triggerConfirm = (title, message, callback) => {
+        setConfirmModal({
+            show: true,
+            title,
+            message,
+            onConfirm: () => {
+                callback();
+                setConfirmModal(prev => ({ ...prev, show: false }));
+            }
+        });
+    };
+
+    const triggerNotify = (message, type = 'success') => {
+        setNotify({ show: true, message, type });
+        setTimeout(() => setNotify(prev => ({ ...prev, show: false })), 4000);
+    };
+
     // Promo management state
     const [promos, setPromos] = useState([]);
     const [showPromoModal, setShowPromoModal] = useState(false);
@@ -184,10 +205,10 @@ const AdminDashboard = () => {
             ));
 
             setEditingProduct(null);
-            alert('Product updated successfully!');
+            triggerNotify('✅ Product updated successfully!');
         } catch (error) {
             console.error('Error updating product:', error);
-            alert('Failed to update product details');
+            triggerNotify('❌ Failed to update product details', 'error');
         }
     };
 
@@ -276,10 +297,10 @@ const AdminDashboard = () => {
             const fileName = `sales-report-${new Date().toISOString().split('T')[0]}.xlsx`;
             XLSX.writeFile(wb, fileName);
 
-            alert('✅ Excel report downloaded successfully!');
+            triggerNotify('✅ Excel report downloaded successfully!');
         } catch (error) {
             console.error('Error downloading report:', error);
-            alert('Failed to generate report');
+            triggerNotify('❌ Failed to generate report', 'error');
         }
     };
 
@@ -303,7 +324,7 @@ const AdminDashboard = () => {
 
             await axios.post(`${API_URL}/admin/coupons`, couponForm, config);
 
-            alert('✅ Coupon created successfully!');
+            triggerNotify('✅ Coupon created successfully!');
             setShowCouponModal(false);
             setCouponForm({
                 code: '',
@@ -316,34 +337,35 @@ const AdminDashboard = () => {
             fetchCoupons();
         } catch (error) {
             console.error('Error creating coupon:', error);
-            alert(error.response?.data?.message || 'Failed to create coupon');
+            triggerNotify(error.response?.data?.message || '❌ Failed to create coupon', 'error');
         }
     };
 
-    const handleDeleteCoupon = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this coupon?')) return;
-
-        try {
-            const token = localStorage.getItem('renee_token');
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.delete(`${API_URL}/admin/coupons/${id}`, config);
-            alert('Coupon deleted successfully');
-            fetchCoupons();
-        } catch (error) {
-            console.error('Error deleting coupon:', error);
-            alert('Failed to delete coupon');
-        }
+    const handleDeleteCoupon = (id) => {
+        triggerConfirm('Delete Coupon', 'Are you sure you want to delete this coupon? This action cannot be undone.', async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                await axios.delete(`${API_URL}/admin/coupons?id=${id}`, config);
+                triggerNotify('✅ Coupon deleted successfully!');
+                fetchCoupons();
+            } catch (error) {
+                console.error('Error deleting coupon:', error);
+                triggerNotify('❌ Failed to delete coupon', 'error');
+            }
+        });
     };
 
     const handleToggleCoupon = async (id) => {
         try {
             const token = localStorage.getItem('renee_token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.patch(`${API_URL}/admin/coupons?id=${id}&action=toggle`, {}, config);
+            const res = await axios.patch(`${API_URL}/admin/coupons?id=${id}&action=toggle`, {}, config);
+            triggerNotify(`✅ Coupon ${res.data.isActive ? 'activated' : 'deactivated'} successfully!`);
             fetchCoupons();
         } catch (error) {
             console.error('Error toggling coupon:', error);
-            alert('Failed to toggle coupon status');
+            triggerNotify('❌ Failed to toggle coupon status', 'error');
         }
     };
 
@@ -380,12 +402,12 @@ const AdminDashboard = () => {
     const createPromo = async () => {
         try {
             const token = localStorage.getItem('renee_token');
-            await axios.post(`${API_URL}/admin/promos`, promoForm, { headers: { Authorization: `Bearer ${token}` } });
+            triggerNotify('✅ Promo created successfully!');
             setShowPromoModal(false);
             setPromoForm({ title: '', discountPercent: '', applicableProducts: [], startDate: '', endDate: '' });
             fetchPromos();
         } catch (error) {
-            alert(error.response?.data?.message || 'Error creating promo');
+            triggerNotify(error.response?.data?.message || '❌ Error creating promo', 'error');
         }
     };
 
@@ -399,39 +421,46 @@ const AdminDashboard = () => {
         }
     };
 
-    const deletePromo = async (id) => {
-        if (!window.confirm('Delete promo?')) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/promos?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
-            fetchPromos();
-        } catch (error) {
-            console.error(error);
-        }
+    const deletePromo = (id) => {
+        triggerConfirm('Delete Promo', 'Delete this promotion? This will immediately stop the discount for all customers.', async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await axios.delete(`${API_URL}/admin/promos?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                triggerNotify('✅ Promo deleted successfully!');
+                fetchPromos();
+            } catch (error) {
+                console.error(error);
+                triggerNotify('❌ Failed to delete promo', 'error');
+            }
+        });
     };
 
-    const deleteOrder = async (id) => {
-        if (!window.confirm('Delete this order permanently?')) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/orders?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
-            fetchDashboardData();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to delete order');
-        }
+    const deleteOrder = (id) => {
+        triggerConfirm('Delete Order', 'Delete this order permanently? This action is irreversible.', async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await axios.delete(`${API_URL}/admin/orders?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                triggerNotify('✅ Order deleted successfully!');
+                fetchDashboardData();
+            } catch (error) {
+                console.error(error);
+                triggerNotify('❌ Failed to delete order', 'error');
+            }
+        });
     };
 
-    const deleteCustomer = async (id) => {
-        if (!window.confirm('Delete this customer?')) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/customers?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
-            fetchDashboardData();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to delete customer');
-        }
+    const deleteCustomer = (id) => {
+        triggerConfirm('Delete Customer', 'Are you sure you want to delete this customer? All their associated data will be removed.', async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await axios.delete(`${API_URL}/admin/customers?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                triggerNotify('✅ Customer deleted successfully!');
+                fetchDashboardData();
+            } catch (error) {
+                console.error(error);
+                triggerNotify('❌ Failed to delete customer', 'error');
+            }
+        });
     };
 
     // Bulk Delete Handlers
@@ -442,21 +471,22 @@ const AdminDashboard = () => {
         if (selectedOrders.length === recentOrders.length) setSelectedOrders([]);
         else setSelectedOrders(recentOrders.map(o => o._id));
     };
-    const deleteSelectedOrders = async () => {
+    const deleteSelectedOrders = () => {
         if (selectedOrders.length === 0) return;
-        if (!window.confirm(`Delete ${selectedOrders.length} orders permanently?`)) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            // Optimistic update or wait? Wait is safer.
-            await Promise.all(selectedOrders.map(id =>
-                axios.delete(`${API_URL}/admin/orders?id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
-            ));
-            setSelectedOrders([]);
-            fetchDashboardData();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to delete orders');
-        }
+        triggerConfirm('Delete Selected Orders', `Delete ${selectedOrders.length} orders permanently? This cannot be undone.`, async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await Promise.all(selectedOrders.map(id =>
+                    axios.delete(`${API_URL}/admin/orders?id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
+                ));
+                triggerNotify('✅ Selected orders deleted successfully!');
+                setSelectedOrders([]);
+                fetchDashboardData();
+            } catch (error) {
+                console.error(error);
+                triggerNotify('❌ Failed to delete some orders', 'error');
+            }
+        });
     };
 
     const toggleSelectCustomer = (id) => {
@@ -467,20 +497,22 @@ const AdminDashboard = () => {
         if (selectedCustomers.length === visibleCustomers.length) setSelectedCustomers([]);
         else setSelectedCustomers(visibleCustomers.map(c => c._id));
     };
-    const deleteSelectedCustomers = async () => {
+    const deleteSelectedCustomers = () => {
         if (selectedCustomers.length === 0) return;
-        if (!window.confirm(`Delete ${selectedCustomers.length} customers?`)) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            await Promise.all(selectedCustomers.map(id =>
-                axios.delete(`${API_URL}/admin/customers?id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
-            ));
-            setSelectedCustomers([]);
-            fetchDashboardData();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to delete customers');
-        }
+        triggerConfirm('Delete Selected Customers', `Delete ${selectedCustomers.length} customers? All their history will be erased.`, async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await Promise.all(selectedCustomers.map(id =>
+                    axios.delete(`${API_URL}/admin/customers?id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
+                ));
+                triggerNotify('✅ Selected customers deleted successfully!');
+                setSelectedCustomers([]);
+                fetchDashboardData();
+            } catch (error) {
+                console.error(error);
+                triggerNotify('❌ Failed to delete customers', 'error');
+            }
+        });
     };
 
 
@@ -494,29 +526,34 @@ const AdminDashboard = () => {
             await axios.post(`${API_URL}/admin/generate-token`, {}, { headers: { Authorization: `Bearer ${token}` } });
             const res = await axios.get(`${API_URL}/admin/tokens`, { headers: { Authorization: `Bearer ${token}` } });
             setTokens(res.data);
-        } catch (e) { alert('Failed to generate token'); }
+            triggerNotify('✅ Token generated successfully!');
+        } catch (e) { triggerNotify('❌ Failed to generate token', 'error'); }
         finally { setIsGeneratingToken(false); }
     };
 
-    const handleDeleteToken = async (id) => {
-        if (!window.confirm('Delete this registration token?')) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/tokens?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
-            const res = await axios.get(`${API_URL}/admin/tokens`, { headers: { Authorization: `Bearer ${token}` } });
-            setTokens(res.data);
-        } catch (e) { alert('Failed to delete token'); }
+    const handleDeleteToken = (id) => {
+        triggerConfirm('Delete Token', 'Remove this registration token? It will no longer be valid for new admin registration.', async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await axios.delete(`${API_URL}/admin/tokens?id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                const res = await axios.get(`${API_URL}/admin/tokens`, { headers: { Authorization: `Bearer ${token}` } });
+                setTokens(res.data);
+                triggerNotify('✅ Token deleted');
+            } catch (e) { triggerNotify('❌ Failed to delete token', 'error'); }
+        });
     };
 
-    const handleDeleteAdmin = async (admin) => {
-        if (!window.confirm(`Are you sure you want to delete admin "${admin.username}"? This action cannot be undone.`)) return;
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.delete(`${API_URL}/admin/users/${admin._id}`, { headers: { Authorization: `Bearer ${token}` } });
-            setAdminsList(prev => prev.filter(a => a._id !== admin._id));
-        } catch (e) {
-            alert('Failed to delete admin: ' + (e.response?.data?.message || 'Server error'));
-        }
+    const handleDeleteAdmin = (admin) => {
+        triggerConfirm('Delete Administrator', `Are you sure you want to delete admin "${admin.username}"? This action is permanent.`, async () => {
+            try {
+                const token = localStorage.getItem('renee_token');
+                await axios.delete(`${API_URL}/admin/users/${admin._id}`, { headers: { Authorization: `Bearer ${token}` } });
+                setAdminsList(prev => prev.filter(a => a._id !== admin._id));
+                triggerNotify('✅ Administrator removed');
+            } catch (e) {
+                triggerNotify('❌ Failed to delete admin', 'error');
+            }
+        });
     };
 
     const handleViewActivity = async (admin) => {
@@ -529,7 +566,7 @@ const AdminDashboard = () => {
             setActivityLogs(res.data);
             setShowActivityModal(true);
         } catch (e) {
-            alert('Failed to fetch activity logs');
+            triggerNotify('❌ Failed to fetch activity logs', 'error');
         }
     };
 
@@ -2512,6 +2549,75 @@ const AdminDashboard = () => {
                     </div>
                 )
             }
+
+            {/* --- CUSTOM CONFIRM MODAL --- */}
+            {confirmModal.show && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <div style={{
+                        backgroundColor: '#FFF', width: '90%', maxWidth: '400px',
+                        borderRadius: '20px', padding: '2rem', textAlign: 'center',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.2)', animation: 'scaleUp 0.3s ease'
+                    }}>
+                        <div style={{
+                            width: '64px', height: '64px', backgroundColor: '#FEF2F2',
+                            borderRadius: '50%', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', margin: '0 auto 1.5rem', color: '#EF4444'
+                        }}>
+                            <XCircle size={32} />
+                        </div>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 1rem', color: '#111827' }}>
+                            {confirmModal.title}
+                        </h3>
+                        <p style={{ color: '#6B7280', lineHeight: '1.6', marginBottom: '2rem' }}>
+                            {confirmModal.message}
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button
+                                onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                                style={{
+                                    flex: 1, padding: '0.9rem', borderRadius: '12px',
+                                    border: '1px solid #E5E7EB', backgroundColor: '#FFF',
+                                    fontWeight: '700', cursor: 'pointer', color: '#374151'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmModal.onConfirm}
+                                style={{
+                                    flex: 1, padding: '0.9rem', borderRadius: '12px',
+                                    border: 'none', backgroundColor: '#111827',
+                                    color: '#FFF', fontWeight: '700', cursor: 'pointer'
+                                }}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- CUSTOM NOTIFICATION --- */}
+            {notify.show && (
+                <div style={{
+                    position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 10000, minWidth: '300px', animation: 'slideUp 0.4s ease'
+                }}>
+                    <div style={{
+                        backgroundColor: notify.type === 'error' ? '#EF4444' : '#10B981',
+                        color: '#FFF', padding: '1rem 1.5rem', borderRadius: '12px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)', display: 'flex',
+                        alignItems: 'center', gap: '1rem', fontWeight: '600'
+                    }}>
+                        {notify.type === 'error' ? <XCircle size={20} /> : <CheckCircle size={20} />}
+                        {notify.message}
+                    </div>
+                </div>
+            )}
 
             <Footer
                 companyName="Renee Golden Multi-ventures Limited"

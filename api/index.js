@@ -189,8 +189,8 @@ export default async function handler(req, res) {
                     return res.json(await Customer.find().sort({ totalSpent: -1 }));
                 }
                 if (req.method === 'DELETE') {
-                    const { id } = req.query;
-                    const customer = await Customer.findByIdAndDelete(id);
+                    const resourceId = req.query.id || pathParts[3];
+                    const customer = await Customer.findByIdAndDelete(resourceId);
                     if (customer) await logActivity(user.id, user.username, 'DELETE_CUSTOMER', `Deleted customer ${customer.email}`);
                     return res.json({ message: 'Customer deleted successfully' });
                 }
@@ -202,8 +202,8 @@ export default async function handler(req, res) {
                 if (!user) return;
                 if (req.method === 'GET') return res.json(await Order.find().sort({ createdAt: -1 }));
                 if (req.method === 'DELETE') {
-                    const { id } = req.query;
-                    const order = await Order.findByIdAndDelete(id);
+                    const resourceId = req.query.id || pathParts[3];
+                    const order = await Order.findByIdAndDelete(resourceId);
                     if (order) await logActivity(user.id, user.username, 'DELETE_ORDER', `Deleted order ${order.orderNumber}`);
                     return res.json({ message: 'Order deleted successfully' });
                 }
@@ -219,9 +219,10 @@ export default async function handler(req, res) {
                     return res.status(201).json(promo);
                 }
                 if (req.method === 'PATCH') {
-                    const { id, action } = req.query;
+                    const resourceId = req.query.id || pathParts[3];
+                    const action = req.query.action;
                     if (action === 'toggle') {
-                        const promo = await Promo.findById(id);
+                        const promo = await Promo.findById(resourceId);
                         if (!promo) return res.status(404).json({ message: 'Promo not found' });
                         promo.isActive = !promo.isActive;
                         await promo.save();
@@ -229,7 +230,8 @@ export default async function handler(req, res) {
                     }
                 }
                 if (req.method === 'DELETE') {
-                    await Promo.findByIdAndDelete(req.query.id);
+                    const resourceId = req.query.id || pathParts[3];
+                    await Promo.findByIdAndDelete(resourceId);
                     return res.json({ message: 'Promo deleted' });
                 }
             }
@@ -245,9 +247,10 @@ export default async function handler(req, res) {
                     return res.status(201).json(coupon);
                 }
                 if (req.method === 'PATCH') {
-                    const { id, action } = req.query;
+                    const resourceId = req.query.id || pathParts[3];
+                    const action = req.query.action;
                     if (action === 'toggle') {
-                        const coupon = await Coupon.findById(id);
+                        const coupon = await Coupon.findById(resourceId);
                         if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
                         coupon.isActive = !coupon.isActive;
                         await coupon.save();
@@ -256,9 +259,10 @@ export default async function handler(req, res) {
                     }
                 }
                 if (req.method === 'DELETE') {
-                    const coupon = await Coupon.findByIdAndDelete(req.query.id);
+                    const resourceId = req.query.id || pathParts[3];
+                    const coupon = await Coupon.findByIdAndDelete(resourceId);
                     if (coupon) await logActivity(user.id, user.username, 'DELETE_COUPON', `Deleted coupon ${coupon.code}`);
-                    return res.json({ message: 'Coupon deleted' });
+                    return res.json({ message: 'Coupon deleted successfully' });
                 }
             }
 
