@@ -40,6 +40,62 @@ export default async function handler(req, res) {
             }
         }
 
+        if (section === 'orders' && req.method === 'POST') {
+            const data = req.body || {};
+            const order = await Order.create(data);
+
+            // Update customer record
+            try {
+                await Customer.findOneAndUpdate(
+                    { email: data.customerEmail },
+                    {
+                        $inc: { totalOrders: 1, totalSpent: data.totalAmount },
+                        $set: { lastOrderDate: new Date(), name: data.customerName, phone: data.customerPhone }
+                    },
+                    { upsert: true, new: true }
+                );
+            } catch (ce) { console.error("Customer update error:", ce); }
+
+            return res.status(201).json(order);
+        }
+
+        if (section === 'coupons' && endpoint === 'validate' && req.method === 'POST') {
+            const { code, email, productIds } = req.body || {};
+            if (!code) return res.status(400).json({ valid: false, message: 'Coupon code required' });
+
+            const coupon = await Coupon.findOne({ code, isActive: true });
+            if (!coupon) return res.status(200).json({ valid: false, message: 'Invalid or inactive coupon' });
+
+            const now = new Date();
+            if (now < coupon.startDate || now > coupon.endDate) {
+                return res.status(200).json({ valid: false, message: 'Coupon has expired or is not yet active' });
+            }
+
+            if (coupon.usedBy && coupon.usedBy.includes(email)) {
+                return res.status(200).json({ valid: false, message: 'You have already used this coupon' });
+            }
+
+            if (coupon.usedBy && coupon.usageLimit > 0 && coupon.usedBy.length >= coupon.usageLimit) {
+                return res.status(200).json({ valid: false, message: 'Coupon usage limit reached' });
+            }
+
+            // check applicable products
+            let applicable = coupon.applicableProducts || [];
+            if (productIds && productIds.length > 0 && applicable.length > 0) {
+                const hasMatch = productIds.some(id => applicable.includes(id));
+                if (!hasMatch) {
+                    return res.status(200).json({ valid: false, message: 'Coupon not applicable to items in cart' });
+                }
+            }
+
+            return res.json({
+                valid: true,
+                discountPercent: coupon.discountPercent,
+                applicableProducts: coupon.applicableProducts,
+                message: `Coupon applied! ${coupon.discountPercent}% discount.`
+            });
+        }
+
         // --- AUTH ENDPOINTS ---
         if (section === 'auth') {
             if (endpoint === 'login' && req.method === 'POST') {
