@@ -666,49 +666,7 @@ const AdminDashboard = () => {
         }
     };
 
-    const createBlog = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.post(`${API_URL}/admin/blogs`, blogForm, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setBlogForm({ link: '', caption: '' });
-            setShowBlogModal(false);
-            fetchBlogs();
-            triggerNotify('✅ Blog post created successfully!');
-        } catch (error) {
-            triggerNotify('❌ Failed to create blog post', 'error');
-        }
-    };
 
-    const deleteBlog = (id) => {
-        triggerConfirm('Delete Blog Post', 'Are you sure you want to delete this post?', async () => {
-            try {
-                const token = localStorage.getItem('renee_token');
-                await axios.delete(`${API_URL}/admin/blogs/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                fetchBlogs();
-                triggerNotify('✅ Blog post deleted');
-            } catch (error) {
-                triggerNotify('❌ Failed to delete blog post', 'error');
-            }
-        });
-    };
-
-    const toggleBlogStatus = async (id) => {
-        try {
-            const token = localStorage.getItem('renee_token');
-            await axios.patch(`${API_URL}/admin/blogs/${id}/toggle`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchBlogs();
-            triggerNotify('✅ Blog status updated');
-        } catch (error) {
-            triggerNotify('❌ Failed to update status', 'error');
-        }
-    };
 
     const handleViewActivity = async (admin) => {
         setSelectedAdminName(admin.username);
