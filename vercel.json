@@ -1,12 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/products",
-      "destination": "/api/public/products"
-    },
-    {
-      "source": "/api/promos/active",
-      "destination": "/api/public/active"
+      "source": "/api/:match*",
+      "destination": "/api/index.js"
     },
     {
       "source": "/((?!api).*)",

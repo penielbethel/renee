@@ -1,0 +1,256 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { connectDB } from '../_api_lib/db.js';
+import { User, Token, logActivity, Order, Customer, Promo, Coupon, Product } from '../_api_lib/models.js';
+import { applyCors } from '../_api_lib/cors.js';
+import { requireAuth } from '../_api_lib/auth.js';
+import { STATIC_PRODUCTS } from '../_api_lib/static-products.js';
+
+export default async function handler(req, res) {
+    if (applyCors(req, res)) return;
+
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const pathParts = url.pathname.split('/').filter(p => p);
+
+    // Basic routing: /api/xxx/yyy
+    // pathParts will be something like ["api", "auth", "login"] or ["api", "products"]
+    const section = pathParts[1]; // 'auth', 'admin', 'products', 'promos'
+    const endpoint = pathParts[2]; // 'login', 'analytics', 'active', etc.
+
+    try {
+        await connectDB();
+
+        // --- PUBLIC ENDPOINTS ---
+        if (!section || section === 'products') {
+            try {
+                const products = await Product.find().sort({ createdAt: 1 });
+                return res.json(products);
+            } catch (e) {
+                return res.json(STATIC_PRODUCTS);
+            }
+        }
+
+        if (section === 'promos' && endpoint === 'active') {
+            try {
+                const promos = await Promo.find({ isActive: true }).sort({ createdAt: -1 });
+                return res.json(promos);
+            } catch (e) {
+                return res.json([]);
+            }
+        }
+
+        // --- AUTH ENDPOINTS ---
+        if (section === 'auth') {
+            if (endpoint === 'login' && req.method === 'POST') {
+                const { username, password } = req.body || {};
+                if (!username || !password) return res.status(400).json({ message: 'Username and password are required' });
+                const user = await User.findOne({ username, role: 'admin' });
+                if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+                const match = await bcrypt.compare(password, user.password || '');
+                if (!match) return res.status(401).json({ message: 'Invalid credentials' });
+                const token = jwt.sign({ id: user._id, username: user.username, role: 'admin' }, process.env.JWT_SECRET);
+                await logActivity(user._id, user.username, 'LOGIN', 'Admin logged in');
+                return res.json({ token, user: { username: user.username, role: 'admin' } });
+            }
+
+            if (endpoint === 'register-admin' && req.method === 'POST') {
+                const { username, password, tokenCode } = req.body || {};
+                const tokenDoc = await Token.findOne({ code: tokenCode, used: false });
+                if (!tokenDoc) return res.status(400).json({ message: 'Invalid or already used registration token' });
+                if (new Date() > tokenDoc.expiresAt) return res.status(400).json({ message: 'Registration token has expired' });
+                const existingUser = await User.findOne({ username });
+                if (existingUser) return res.status(400).json({ message: 'Username already exists' });
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const newUser = new User({ username, password: hashedPassword, role: 'admin' });
+                await newUser.save();
+                tokenDoc.used = true;
+                await tokenDoc.save();
+                return res.status(201).json({ message: 'Admin registered successfully' });
+            }
+
+            if (endpoint === 'super-login' && req.method === 'POST') {
+                const { username } = req.body || {};
+                const superAdmins = ['pbmsrvr', 'anthony'];
+                if (!username || !superAdmins.includes(username)) return res.status(401).json({ message: 'Invalid SuperAdmin username' });
+                let user = await User.findOne({ username });
+                if (!user) {
+                    user = new User({ username, role: 'superadmin' });
+                    await user.save();
+                } else if (user.role !== 'superadmin') {
+                    user.role = 'superadmin';
+                    await user.save();
+                }
+                const token = jwt.sign({ id: user._id, username: user.username, role: 'superadmin' }, process.env.JWT_SECRET, { expiresIn: '24h' });
+                await logActivity(user._id, user.username, 'LOGIN', 'SuperAdmin logged in');
+                return res.json({ token, user: { username: user.username, role: 'superadmin' } });
+            }
+        }
+
+        // --- ADMIN ENDPOINTS (Protected) ---
+        if (section === 'admin') {
+            // 1. Analytics
+            if (endpoint === 'analytics') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                if (req.method !== 'GET') return res.status(405).json({ message: 'Method Not Allowed' });
+                const now = new Date();
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setHours(0, 0, 0, 0);
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+                const weeklyOrders = await Order.find({ createdAt: { $gte: startOfWeek }, status: 'completed' });
+                const monthlyOrders = await Order.find({ createdAt: { $gte: startOfMonth }, status: 'completed' });
+                const yearlyOrders = await Order.find({ createdAt: { $gte: startOfYear }, status: 'completed' });
+                const totalOrders = await Order.countDocuments({ status: 'completed' });
+                const totalRevenueAgg = await Order.aggregate([
+                    { $match: { status: 'completed' } },
+                    { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+                ]);
+                const totalCustomers = await Customer.countDocuments();
+                const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(10);
+
+                return res.json({
+                    weekly: { orders: weeklyOrders.length, revenue: weeklyOrders.reduce((s, o) => s + o.totalAmount, 0) },
+                    monthly: { orders: monthlyOrders.length, revenue: monthlyOrders.reduce((s, o) => s + o.totalAmount, 0) },
+                    yearly: { orders: yearlyOrders.length, revenue: yearlyOrders.reduce((s, o) => s + o.totalAmount, 0) },
+                    total: { orders: totalOrders, revenue: totalRevenueAgg[0]?.total || 0, customers: totalCustomers },
+                    recentOrders
+                });
+            }
+
+            // 2. Customers
+            if (endpoint === 'customers') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') {
+                    const { action, email } = req.query;
+                    if (action === 'orders' && email) {
+                        return res.json(await Order.find({ customerEmail: email }).sort({ createdAt: -1 }));
+                    }
+                    return res.json(await Customer.find().sort({ totalSpent: -1 }));
+                }
+                if (req.method === 'DELETE') {
+                    const { id } = req.query;
+                    const customer = await Customer.findByIdAndDelete(id);
+                    if (customer) await logActivity(user.id, user.username, 'DELETE_CUSTOMER', `Deleted customer ${customer.email}`);
+                    return res.json({ message: 'Customer deleted successfully' });
+                }
+            }
+
+            // 3. Orders
+            if (endpoint === 'orders') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') return res.json(await Order.find().sort({ createdAt: -1 }));
+                if (req.method === 'DELETE') {
+                    const { id } = req.query;
+                    const order = await Order.findByIdAndDelete(id);
+                    if (order) await logActivity(user.id, user.username, 'DELETE_ORDER', `Deleted order ${order.orderNumber}`);
+                    return res.json({ message: 'Order deleted successfully' });
+                }
+            }
+
+            // 4. Promos
+            if (endpoint === 'promos') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') return res.json(await Promo.find().sort({ createdAt: -1 }));
+                if (req.method === 'POST') {
+                    const promo = await Promo.create({ ...(req.body || {}), createdBy: user.username });
+                    return res.status(201).json(promo);
+                }
+                if (req.method === 'PATCH') {
+                    const { id, action } = req.query;
+                    if (action === 'toggle') {
+                        const promo = await Promo.findById(id);
+                        if (!promo) return res.status(404).json({ message: 'Promo not found' });
+                        promo.isActive = !promo.isActive;
+                        await promo.save();
+                        return res.json(promo);
+                    }
+                }
+                if (req.method === 'DELETE') {
+                    await Promo.findByIdAndDelete(req.query.id);
+                    return res.json({ message: 'Promo deleted' });
+                }
+            }
+
+            // 5. Coupons
+            if (endpoint === 'coupons') {
+                const user = requireAuth(req, res, ['admin', 'superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') return res.json(await Coupon.find().sort({ createdAt: -1 }));
+                if (req.method === 'POST') {
+                    const coupon = await Coupon.create({ ...(req.body || {}), createdBy: user.username });
+                    await logActivity(user.id, user.username, 'CREATE_COUPON', `Created coupon ${coupon.code}`);
+                    return res.status(201).json(coupon);
+                }
+                if (req.method === 'PATCH') {
+                    const { id, action } = req.query;
+                    if (action === 'toggle') {
+                        const coupon = await Coupon.findById(id);
+                        if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
+                        coupon.isActive = !coupon.isActive;
+                        await coupon.save();
+                        await logActivity(user.id, user.username, 'TOGGLE_COUPON', `Toggled coupon ${coupon.code} to ${coupon.isActive}`);
+                        return res.json(coupon);
+                    }
+                }
+                if (req.method === 'DELETE') {
+                    const coupon = await Coupon.findByIdAndDelete(req.query.id);
+                    if (coupon) await logActivity(user.id, user.username, 'DELETE_COUPON', `Deleted coupon ${coupon.code}`);
+                    return res.json({ message: 'Coupon deleted' });
+                }
+            }
+
+            // --- SuperAdmin Only ---
+            // 6. Tokens
+            if (endpoint === 'tokens') {
+                const user = requireAuth(req, res, ['superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') return res.json(await Token.find().sort({ createdAt: -1 }));
+                if (req.method === 'DELETE') {
+                    await Token.findByIdAndDelete(req.query.id);
+                    return res.json({ message: 'Token deleted' });
+                }
+            }
+
+            // 7. Generate Token
+            if (endpoint === 'generate-token') {
+                const user = requireAuth(req, res, ['superadmin']);
+                if (!user) return;
+                if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
+                const expiresAt = new Date();
+                expiresAt.setHours(expiresAt.getHours() + 24);
+                for (let i = 0; i < 5; i++) {
+                    const code = crypto.randomBytes(6).toString('base64').replace(/[^A-Z0-9]/gi, '').substring(0, 8).toUpperCase();
+                    try {
+                        const newToken = new Token({ code, expiresAt, used: false });
+                        await newToken.save();
+                        return res.json({ code });
+                    } catch (err) { if (err.code === 11000) continue; throw err; }
+                }
+                return res.status(500).json({ message: 'Could not generate unique token' });
+            }
+
+            // 8. Users
+            if (endpoint === 'users') {
+                const user = requireAuth(req, res, ['superadmin']);
+                if (!user) return;
+                if (req.method === 'GET') return res.json(await User.find({ role: 'admin' }).select('-password'));
+                if (req.method === 'DELETE') {
+                    await User.findByIdAndDelete(req.query.id);
+                    return res.json({ message: 'Admin user deleted successfully' });
+                }
+            }
+        }
+
+        return res.status(404).json({ message: 'API Route Not Found' });
+    } catch (error) {
+        console.error('API Error:', error);
+        return res.status(500).json({ message: 'Server Internal Error' });
+    }
+}
