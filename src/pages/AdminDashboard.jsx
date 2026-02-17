@@ -734,10 +734,10 @@ const AdminDashboard = () => {
                                         <div style={{ padding: '1rem 1.5rem', backgroundColor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <ShoppingCart size={18} color="#D4AF37" />
                                             <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#4B5563', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                                Orders ({searchResults.orders.length})
+                                                Orders ({(searchResults.orders || []).length})
                                             </span>
                                         </div>
-                                        {searchResults.orders.map(order => (
+                                        {(searchResults.orders || []).map(order => (
                                             <div key={order._id} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', transition: 'background 0.2s' }}
                                                 onMouseOver={e => e.currentTarget.style.backgroundColor = '#FFFBEB'}
                                                 onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -809,10 +809,10 @@ const AdminDashboard = () => {
                                         <div style={{ padding: '1rem 1.5rem', backgroundColor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <Users size={18} color="#D4AF37" />
                                             <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#4B5563', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                                Customers ({searchResults.customers.length})
+                                                Customers ({(searchResults.customers || []).length})
                                             </span>
                                         </div>
-                                        {searchResults.customers.map(cust => (
+                                        {(searchResults.customers || []).map(cust => (
                                             <div key={cust._id} style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}
                                                 onMouseOver={e => e.currentTarget.style.backgroundColor = '#FFFBEB'}
                                                 onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -2489,7 +2489,7 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
                             <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
-                                {activityLogs.length > 0 ? (
+                                {(activityLogs || []).length > 0 ? (
                                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                                         {activityLogs.map((log) => (
                                             <li key={log._id} style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
