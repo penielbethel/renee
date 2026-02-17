@@ -104,9 +104,7 @@ const AdminDashboard = () => {
 
             setAnalytics(analyticsRes.data);
             setCustomers(customersRes.data);
-            setCoupons([]);
-            setRecentOrders(ordersRes.data);
-
+            fetchCoupons();
             setRecentOrders(ordersRes.data);
 
             // Fetch Admins & Tokens for SuperAdmin
