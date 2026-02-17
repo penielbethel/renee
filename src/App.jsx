@@ -17,10 +17,15 @@ import GlobalServices from './pages/Subsidiaries/GlobalServices';
 import RuralEmpowerment from './pages/Subsidiaries/RuralEmpowerment';
 import EstateServices from './pages/Subsidiaries/EstateServices';
 
+import Preloader from './components/Preloader';
+
 function App() {
+  const [loading, setLoading] = React.useState(true);
+
   return (
     <Router>
-      <div className="app">
+      {loading && <Preloader onFinish={() => setLoading(false)} />}
+      <div className="app" style={{ display: loading ? 'none' : 'block' }}>
         <Routes>
           {/* Parent Routes */}
           <Route path="/" element={<Home />} />

@@ -1,0 +1,115 @@
+/* =========================================
+   PRELOADER STYLES
+   ========================================= */
+
+.preloader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #1A1A1A;
+    /* Dark premium background */
+    z-index: 9999;
+    /* Highest priority */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s ease-out, visibility 0.8s;
+}
+
+.preloader-content {
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.preloader-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    color: #D4AF37;
+    /* Gold */
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUpIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.preloader-subtext {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    color: #888;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUpIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+}
+
+/* Luxury loading line */
+.loading-line-container {
+    width: 200px;
+    height: 2px;
+    background-color: rgba(212, 175, 55, 0.2);
+    margin-top: 40px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.loading-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background-color: #D4AF37;
+    box-shadow: 0 0 10px #D4AF37;
+    animation: loadProgress 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeUpIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes loadProgress {
+    0% {
+        width: 0%;
+    }
+
+    30% {
+        width: 40%;
+    }
+
+    60% {
+        width: 70%;
+    }
+
+    90% {
+        width: 95%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .preloader-text {
+        font-size: 2rem;
+    }
+
+    .preloader-subtext {
+        font-size: 0.85rem;
+    }
+}
