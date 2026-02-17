@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { connectDB } from '../_api_lib/db.js';
-import { User, Token, logActivity, Order, Customer, Promo, Coupon, Product, ActivityLog } from '../_api_lib/models.js';
+import { User, Token, logActivity, Order, Customer, Promo, Coupon, Product, ActivityLog, BlogPost } from '../_api_lib/models.js';
 import { applyCors } from '../_api_lib/cors.js';
 import { requireAuth } from '../_api_lib/auth.js';
 import { STATIC_PRODUCTS } from '../_api_lib/static-products.js';
@@ -384,6 +384,68 @@ export default async function handler(req, res) {
                     return res.json(logs);
                 }
             }
+
+            // 10. Blog Management (Admin)
+            if (endpoint === 'blogs') {
+                const id = pathParts[3]; // /api/admin/blogs/:id
+                const action = pathParts[4]; // /api/admin/blogs/:id/toggle
+
+                // GET all blogs (admin)
+                if (req.method === 'GET' && !id) {
+                    const user = requireAuth(req, res);
+                    if (!user) return;
+                    const blogs = await BlogPost.find().sort({ createdAt: -1 });
+                    return res.json(blogs);
+                }
+
+                // POST create new blog
+                if (req.method === 'POST' && !id) {
+                    const user = requireAuth(req, res);
+                    if (!user) return;
+                    const { link, title, caption, author } = req.body;
+                    if (!link || !caption) {
+                        return res.status(400).json({ message: 'Link and Caption are required' });
+                    }
+                    const blog = await BlogPost.create({
+                        link,
+                        title: title || '',
+                        caption,
+                        author: author || user.username
+                    });
+                    await logActivity(user.id, user.username, 'Created Blog Post', `Title: ${title || caption.substring(0, 50)}`);
+                    return res.status(201).json({ message: 'Blog post created', blog });
+                }
+
+                // PATCH toggle blog status
+                if (req.method === 'PATCH' && id && action === 'toggle') {
+                    const user = requireAuth(req, res);
+                    if (!user) return;
+                    const blog = await BlogPost.findById(id);
+                    if (!blog) return res.status(404).json({ message: 'Blog post not found' });
+                    blog.isActive = !blog.isActive;
+                    await blog.save();
+                    await logActivity(user.id, user.username, 'Toggled Blog Status', `Post: ${blog.title || blog.caption.substring(0, 30)} -> ${blog.isActive ? 'Active' : 'Inactive'}`);
+                    return res.json(blog);
+                }
+
+                // DELETE blog post
+                if (req.method === 'DELETE' && id) {
+                    const user = requireAuth(req, res);
+                    if (!user) return;
+                    const blog = await BlogPost.findById(id);
+                    if (blog) {
+                        await logActivity(user.id, user.username, 'Deleted Blog Post', `Title: ${blog.title || blog.caption.substring(0, 30)}`);
+                    }
+                    await BlogPost.findByIdAndDelete(id);
+                    return res.json({ message: 'Blog post deleted' });
+                }
+            }
+        }
+
+        // --- PUBLIC: Get Active Blogs ---
+        if (section === 'blogs' && req.method === 'GET') {
+            const blogs = await BlogPost.find({ isActive: true }).sort({ createdAt: -1 });
+            return res.json(blogs);
         }
 
         return res.status(404).json({ message: 'API Route Not Found' });

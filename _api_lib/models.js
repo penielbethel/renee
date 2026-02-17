@@ -88,6 +88,15 @@ const PromoSchema = new mongoose.Schema({
   createdBy: { type: String }
 }, { timestamps: true });
 
+const BlogPostSchema = new mongoose.Schema({
+  link: { type: String, required: true },
+  title: { type: String, default: '' },
+  caption: { type: String, required: true },
+  author: { type: String, required: true },
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
 export const Token = mongoose.models.Token || mongoose.model('Token', TokenSchema);
 export const User = mongoose.models.User || mongoose.model('User', UserSchema);
 export const ActivityLog = mongoose.models.ActivityLog || mongoose.model('ActivityLog', ActivityLogSchema);
@@ -96,6 +105,7 @@ export const Customer = mongoose.models.Customer || mongoose.model('Customer', C
 export const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema);
 export const Promo = mongoose.models.Promo || mongoose.model('Promo', PromoSchema);
 export const Coupon = mongoose.models.Coupon || mongoose.model('Coupon', CouponSchema);
+export const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost', BlogPostSchema);
 
 export const logActivity = async (adminId, adminName, action, details) => {
   try {

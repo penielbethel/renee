@@ -2923,7 +2923,7 @@ const AdminDashboard = () => {
 
                             <form onSubmit={createBlog}>
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Image Link (Thumbnail)</label>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.95rem' }}>Thumbnail Image Link</label>
                                     <input
                                         type="url"
                                         placeholder="https://example.com/image.jpg"
@@ -2931,23 +2931,63 @@ const AdminDashboard = () => {
                                         onChange={e => setBlogForm({ ...blogForm, link: e.target.value })}
                                         required
                                         style={{
-                                            width: '100%', padding: '0.75rem', borderRadius: '8px',
-                                            border: '1px solid #D1D5DB', fontSize: '1rem'
+                                            width: '100%', padding: '0.85rem', borderRadius: '10px',
+                                            border: '2px solid #E5E7EB', fontSize: '1rem',
+                                            transition: 'border-color 0.3s ease', outline: 'none'
                                         }}
+                                        onFocus={e => e.target.style.borderColor = '#D4AF37'}
+                                        onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+                                    />
+                                    {blogForm.link && (
+                                        <div style={{ marginTop: '0.75rem', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E7EB', maxHeight: '120px' }}>
+                                            <img src={blogForm.link} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover' }}
+                                                onError={e => { e.target.style.display = 'none'; }} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.95rem' }}>
+                                        Headline <span style={{ color: '#D4AF37' }}>*</span>
+                                    </label>
+                                    <p style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', color: '#9CA3AF' }}>The main title of the blog post — displayed prominently on the blog page</p>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter a bold, attention-grabbing headline..."
+                                        value={blogForm.title}
+                                        onChange={e => setBlogForm({ ...blogForm, title: e.target.value })}
+                                        required
+                                        style={{
+                                            width: '100%', padding: '1rem', borderRadius: '10px',
+                                            border: '2px solid #E5E7EB', fontSize: '1.25rem',
+                                            fontWeight: '700', fontFamily: 'Outfit, sans-serif',
+                                            letterSpacing: '-0.01em', color: '#111827',
+                                            transition: 'border-color 0.3s ease', outline: 'none'
+                                        }}
+                                        onFocus={e => e.target.style.borderColor = '#D4AF37'}
+                                        onBlur={e => e.target.style.borderColor = '#E5E7EB'}
                                     />
                                 </div>
+
                                 <div style={{ marginBottom: '2rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Caption / Title</label>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', color: '#1A1A1A', fontSize: '0.95rem' }}>
+                                        Caption / Description <span style={{ color: '#D4AF37' }}>*</span>
+                                    </label>
+                                    <p style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', color: '#9CA3AF' }}>A brief description or summary shown below the headline</p>
                                     <textarea
-                                        placeholder="Enter blog post title or caption..."
+                                        placeholder="Write a short description or caption for this post..."
                                         value={blogForm.caption}
                                         onChange={e => setBlogForm({ ...blogForm, caption: e.target.value })}
                                         required
-                                        rows="4"
+                                        rows="3"
                                         style={{
-                                            width: '100%', padding: '0.75rem', borderRadius: '8px',
-                                            border: '1px solid #D1D5DB', fontSize: '1rem', resize: 'vertical'
+                                            width: '100%', padding: '0.85rem', borderRadius: '10px',
+                                            border: '2px solid #E5E7EB', fontSize: '0.95rem',
+                                            resize: 'vertical', lineHeight: '1.6', color: '#374151',
+                                            transition: 'border-color 0.3s ease', outline: 'none'
                                         }}
+                                        onFocus={e => e.target.style.borderColor = '#D4AF37'}
+                                        onBlur={e => e.target.style.borderColor = '#E5E7EB'}
                                     />
                                 </div>
 
@@ -2956,21 +2996,30 @@ const AdminDashboard = () => {
                                         type="button"
                                         onClick={() => setShowBlogModal(false)}
                                         style={{
-                                            padding: '0.75rem 1.5rem', borderRadius: '8px',
+                                            padding: '0.85rem 1.75rem', borderRadius: '10px',
                                             border: '1px solid #D1D5DB', background: '#FFF',
-                                            fontWeight: '600', cursor: 'pointer'
+                                            fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem',
+                                            transition: 'all 0.3s ease'
                                         }}
+                                        onMouseOver={e => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                                        onMouseOut={e => e.currentTarget.style.backgroundColor = '#FFF'}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         style={{
-                                            padding: '0.75rem 1.5rem', borderRadius: '8px',
-                                            border: 'none', background: '#D4AF37',
-                                            color: '#FFF', fontWeight: '700', cursor: 'pointer'
+                                            padding: '0.85rem 1.75rem', borderRadius: '10px',
+                                            border: 'none', background: 'linear-gradient(135deg, #D4AF37, #C5A028)',
+                                            color: '#FFF', fontWeight: '700', cursor: 'pointer',
+                                            fontSize: '0.95rem', display: 'flex', alignItems: 'center',
+                                            gap: '0.5rem', transition: 'all 0.3s ease',
+                                            boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)'
                                         }}
+                                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
                                     >
+                                        <Plus size={18} />
                                         Publish Post
                                     </button>
                                 </div>

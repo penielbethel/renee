@@ -143,6 +143,7 @@ const Promo = mongoose.model('Promo', PromoSchema);
 // Blog Schema
 const BlogSchema = new mongoose.Schema({
     link: { type: String, required: true }, // URL to image or article
+    title: { type: String, default: '' }, // Headline of the post
     caption: { type: String, required: true },
     author: { type: String, required: true }, // Admin Name
     isActive: { type: Boolean, default: true },
@@ -1161,7 +1162,7 @@ app.get('/api/admin/blogs', authenticateToken, async (req, res) => {
 // Create Blog Post (Admin)
 app.post('/api/admin/blogs', authenticateToken, async (req, res) => {
     try {
-        const { link, caption, author } = req.body;
+        const { link, title, caption, author } = req.body;
 
         if (!link || !caption) {
             return res.status(400).json({ message: 'Link and Caption are required' });
@@ -1169,6 +1170,7 @@ app.post('/api/admin/blogs', authenticateToken, async (req, res) => {
 
         const blog = new BlogPost({
             link,
+            title: title || '',
             caption,
             author: author || req.user.username // Use provided author name or fallback to username
         });
