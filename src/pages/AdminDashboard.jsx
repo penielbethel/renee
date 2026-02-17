@@ -1615,14 +1615,14 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
 
-                            {coupons.length === 0 ? (
+                            {(coupons || []).length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '2rem', color: '#888', backgroundColor: '#F9F9F9', borderRadius: '12px' }}>
                                     <Ticket size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
                                     <p>No coupons created yet. Click "Create New Coupon" to start.</p>
                                 </div>
                             ) : (
                                 <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-                                    {coupons.map(coupon => (
+                                    {(coupons || []).map(coupon => (
                                         <div key={coupon._id} style={{
                                             border: '1px solid #E0E0E0',
                                             borderRadius: '12px',
@@ -1677,7 +1677,7 @@ const AdminDashboard = () => {
                                                 <Package size={14} style={{ display: 'inline', marginRight: '0.5rem' }} />
                                                 {(coupon.applicableProducts || []).length === 0
                                                     ? 'All Products'
-                                                    : products.filter(p => (coupon.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${p.price.toLocaleString()})`).join(', ') || `${(coupon.applicableProducts || []).length} Specific Product(s)`}
+                                                    : (products || []).filter(p => (coupon.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${(p.price || 0).toLocaleString()})`).join(', ') || `${(coupon.applicableProducts || []).length} Specific Product(s)`}
                                             </div>
 
                                             <div style={{ fontSize: '0.9rem', color: '#666' }}>
@@ -1748,10 +1748,10 @@ const AdminDashboard = () => {
                                 </div>
 
                                 <div style={{ display: 'grid', gap: '1rem' }}>
-                                    {promos.length === 0 ? (
+                                    {(promos || []).length === 0 ? (
                                         <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No active promotions found.</p>
                                     ) : (
-                                        promos.map(promo => (
+                                        (promos || []).map(promo => (
                                             <div key={promo._id} style={{
                                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                                 padding: '1rem', border: '1px solid #E0E0E0', borderRadius: '8px',
@@ -1772,7 +1772,7 @@ const AdminDashboard = () => {
                                                         {promo.discountPercent}% OFF • {new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}
                                                     </p>
                                                     <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#888' }}>
-                                                        Products: {(promo.applicableProducts || []).length === 0 ? 'All Products' : (products.filter(p => (promo.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${p.price.toLocaleString()})`).join(', ') || `${(promo.applicableProducts || []).length} items`)}
+                                                        Products: {(promo.applicableProducts || []).length === 0 ? 'All Products' : ((products || []).filter(p => (promo.applicableProducts || []).includes(p.id)).map(p => `${p.name} (₦${(p.price || 0).toLocaleString()})`).join(', ') || `${(promo.applicableProducts || []).length} items`)}
                                                     </p>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -1845,7 +1845,7 @@ const AdminDashboard = () => {
                                         <div>
                                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Select Products (Optional)</label>
                                             <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E0E0E0', borderRadius: '4px', padding: '0.5rem' }}>
-                                                {products.map(p => (
+                                                {(products || []).map(p => (
                                                     <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem' }}>
                                                         <input
                                                             type="checkbox"
@@ -2266,7 +2266,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                 ) : (
                                                     <div style={{ display: 'grid', gap: '0.5rem' }}>
-                                                        {products.map(product => (
+                                                        {(products || []).map(product => (
                                                             <label key={product.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '4px', backgroundColor: couponForm.applicableProducts.includes(product.id) ? '#FFF9E6' : 'transparent' }}>
                                                                 <input
                                                                     type="checkbox"
@@ -2324,145 +2324,146 @@ const AdminDashboard = () => {
             </section >
 
             {/* Super Admin: Admin Management */}
-            {user.role === 'superadmin' && (
-                <section style={{ padding: '2rem 5%' }}>
-                    <div style={{ backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                        <h2 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '1.5rem', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A' }}>
-                            Admin Management
-                        </h2>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                                <thead>
-                                    <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Username</th>
-                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Role</th>
-                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Created At</th>
-                                        <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {adminsList.length > 0 ? (
-                                        adminsList.map((admin) => (
-                                            <tr key={admin._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                                <td style={{ padding: '1rem', color: '#1F2937', fontWeight: '500' }}>{admin.username}</td>
+            {
+                user.role === 'superadmin' && (
+                    <section style={{ padding: '2rem 5%' }}>
+                        <div style={{ backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '1.5rem', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A' }}>
+                                Admin Management
+                            </h2>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                                            <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Username</th>
+                                            <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Role</th>
+                                            <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Created At</th>
+                                            <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {adminsList.length > 0 ? (
+                                            adminsList.map((admin) => (
+                                                <tr key={admin._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                                                    <td style={{ padding: '1rem', color: '#1F2937', fontWeight: '500' }}>{admin.username}</td>
+                                                    <td style={{ padding: '1rem' }}>
+                                                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: admin.role === 'superadmin' ? '#FEF3C7' : '#E0E7FF', color: admin.role === 'superadmin' ? '#D97706' : '#4F46E5' }}>
+                                                            {admin.role}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>
+                                                        {new Date(admin.createdAt).toLocaleDateString()}
+                                                    </td>
+                                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                                        <button
+                                                            onClick={() => handleViewActivity(admin)}
+                                                            style={{
+                                                                padding: '0.5rem 1rem',
+                                                                backgroundColor: '#1A1A1A',
+                                                                color: '#D4AF37',
+                                                                border: 'none',
+                                                                borderRadius: '6px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: '600',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem'
+                                                            }}
+                                                        >
+                                                            <Activity size={16} /> Activity
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteAdmin(admin)}
+                                                            style={{
+                                                                padding: '0.5rem 1rem',
+                                                                backgroundColor: '#FEE2E2',
+                                                                color: '#DC2626',
+                                                                border: 'none',
+                                                                borderRadius: '6px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: '600',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem',
+                                                                marginLeft: '0.5rem'
+                                                            }}
+                                                        >
+                                                            <Trash2 size={16} /> Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>No other admins found.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <div style={{ marginTop: '2rem', backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: '800', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A', margin: 0 }}>
+                                    Registration Tokens
+                                </h2>
+                                <button
+                                    onClick={handleGenerateToken}
+                                    disabled={isGeneratingToken}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        backgroundColor: '#D4AF37',
+                                        color: '#1A1A1A',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontWeight: '700',
+                                        cursor: isGeneratingToken ? 'not-allowed' : 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                    }}
+                                >
+                                    <Plus size={20} /> {isGeneratingToken ? 'Generating...' : 'Generate Token'}
+                                </button>
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                                            <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Token Code</th>
+                                            <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Status</th>
+                                            <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Expires</th>
+                                            <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tokens.length > 0 ? tokens.map(token => (
+                                            <tr key={token._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                                                <td style={{ padding: '1rem', fontFamily: 'monospace', fontWeight: '700', fontSize: '1.1rem', letterSpacing: '1px' }}>{token.code}</td>
                                                 <td style={{ padding: '1rem' }}>
-                                                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: admin.role === 'superadmin' ? '#FEF3C7' : '#E0E7FF', color: admin.role === 'superadmin' ? '#D97706' : '#4F46E5' }}>
-                                                        {admin.role}
+                                                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '50px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: token.used ? '#FEE2E2' : '#D1FAE5', color: token.used ? '#B91C1C' : '#047857' }}>
+                                                        {token.used ? 'Used' : 'Active'}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>
-                                                    {new Date(admin.createdAt).toLocaleDateString()}
-                                                </td>
+                                                <td style={{ padding: '1rem', color: '#6B7280' }}>{new Date(token.expiresAt).toLocaleDateString()}</td>
                                                 <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                                    <button
-                                                        onClick={() => handleViewActivity(admin)}
-                                                        style={{
-                                                            padding: '0.5rem 1rem',
-                                                            backgroundColor: '#1A1A1A',
-                                                            color: '#D4AF37',
-                                                            border: 'none',
-                                                            borderRadius: '6px',
-                                                            cursor: 'pointer',
-                                                            fontSize: '0.9rem',
-                                                            fontWeight: '600',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: '0.5rem'
-                                                        }}
-                                                    >
-                                                        <Activity size={16} /> Activity
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteAdmin(admin)}
-                                                        style={{
-                                                            padding: '0.5rem 1rem',
-                                                            backgroundColor: '#FEE2E2',
-                                                            color: '#DC2626',
-                                                            border: 'none',
-                                                            borderRadius: '6px',
-                                                            cursor: 'pointer',
-                                                            fontSize: '0.9rem',
-                                                            fontWeight: '600',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: '0.5rem',
-                                                            marginLeft: '0.5rem'
-                                                        }}
-                                                    >
-                                                        <Trash2 size={16} /> Delete
+                                                    <button onClick={() => handleDeleteToken(token._id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                                        <Trash2 size={20} />
                                                     </button>
                                                 </td>
                                             </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>No other admins found.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                        )) : (
+                                            <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No tokens generated.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
-                    </div>
-
-                    <div style={{ marginTop: '2rem', backgroundColor: '#FFF', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.8rem', fontWeight: '800', fontFamily: 'Outfit, sans-serif', color: '#1A1A1A', margin: 0 }}>
-                                Registration Tokens
-                            </h2>
-                            <button
-                                onClick={handleGenerateToken}
-                                disabled={isGeneratingToken}
-                                style={{
-                                    padding: '0.75rem 1.5rem',
-                                    backgroundColor: '#D4AF37',
-                                    color: '#1A1A1A',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: '700',
-                                    cursor: isGeneratingToken ? 'not-allowed' : 'pointer',
-                                    display: 'flex', alignItems: 'center', gap: '0.5rem'
-                                }}
-                            >
-                                <Plus size={20} /> {isGeneratingToken ? 'Generating...' : 'Generate Token'}
-                            </button>
-                        </div>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead>
-                                    <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Token Code</th>
-                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Status</th>
-                                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#4B5563' }}>Expires</th>
-                                        <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#4B5563' }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tokens.length > 0 ? tokens.map(token => (
-                                        <tr key={token._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                            <td style={{ padding: '1rem', fontFamily: 'monospace', fontWeight: '700', fontSize: '1.1rem', letterSpacing: '1px' }}>{token.code}</td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <span style={{ padding: '0.25rem 0.75rem', borderRadius: '50px', fontSize: '0.85rem', fontWeight: '600', backgroundColor: token.used ? '#FEE2E2' : '#D1FAE5', color: token.used ? '#B91C1C' : '#047857' }}>
-                                                    {token.used ? 'Used' : 'Active'}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '1rem', color: '#6B7280' }}>{new Date(token.expiresAt).toLocaleDateString()}</td>
-                                            <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                                <button onClick={() => handleDeleteToken(token._id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                                    <Trash2 size={20} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No tokens generated.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                </section>
-            )
+                    </section>
+                )
             }
 
             {/* Activity Modal */}
